@@ -74,3 +74,39 @@ DATABASE_URL example in `apps/api/.env`:
 - Add heavy UI kits before a simple Tailwind tasks screen works
 - Force Postgres before Docker/deploy phase
 - Run `npm audit fix --force` casually
+
+## Code review checklist (do not skip)
+
+Before saying a feature is done, self-review against this list. These are patterns that often get missed:
+
+### Correctness / edge cases
+- Blank vs whitespace-only input (`trim()` where empty should mean empty)
+- Disable or block submit while a request is in flight (`isSubmitting`) to prevent double submits
+- Clear previous error/success state at the start of a new submit/action
+- Handle all relevant API failure shapes, not only the happy-path status code (e.g. same business error may arrive on 400 or 422; check response body codes/fields too)
+- Relative paths / env loading: confirm `.env` is actually loaded at runtime, not only by CLI tools
+- After schema/client changes, regenerate Prisma client and verify the server still boots
+
+### UX / API contract
+- Keep client-side validation errors visually and logically separate from server/API errors
+- Show validation feedback as the user types when that is the product requirement; hide rules that already pass
+- Exact user-facing copy matters when specified — do not paraphrase error strings
+- Loading and empty states: list screens should handle `[]` and in-flight fetches cleanly
+
+### Accessibility (when building forms/UI)
+- Inputs need correct accessible names (visible `<label htmlFor>` / `id`, or equivalent)
+- Use `aria-invalid` when a field failed validation (including after submit attempt for empty required fields)
+- Prefer native buttons/forms with explicit `onSubmit` / `preventDefault` over click-only hacks
+
+### Nest / React specifics for Kurashi
+- Controller stays thin; validation and DB logic live in the service (or pipes/DTOs when added)
+- Prefer typed DTO/`@Body()` objects over picking a single field if the body might be missing/partial
+- CORS, dotenv, and `DATABASE_URL` must work for both `npm run start:dev` and manual curl/fetch tests
+- Do not commit `.env`, secrets, or `*.db`
+
+### Definition of done
+A task is not done until:
+1. It runs locally without manual patching
+2. Happy path was tested (curl or UI)
+3. At least one failure/empty/invalid path was tested
+4. `git status` was checked so junk files are not staged
