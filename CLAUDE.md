@@ -126,6 +126,9 @@ A task is not done until:
 - `apps/api/src/prisma` — Prisma Nest wiring
 - `apps/api/src/tasks` — tasks HTTP API
 - `CLAUDE.md` — this brief (keep updated when architecture decisions change)
+- `docs/decisions.md` — stack/product decisions
+- `apps/api/.env.example` — required env vars
+- `README.md` — setup + curl smoke tests
 
 ## Standard work loop
 1. Read this file and the files you will touch
@@ -140,3 +143,5 @@ A task is not done until:
 - If two approaches are equal, choose the one closer to Nest/React common docs
 - Ask the user only for product decisions (UX copy, scope, auth requirements), not for routine coding choices
 
+## Keep docs in sync
+When you change stack, scripts, or workflow, update `CLAUDE.md`, `README.md`, and `docs/decisions.md` in the same PR/commit when practical.
