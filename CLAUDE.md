@@ -110,3 +110,33 @@ A task is not done until:
 2. Happy path was tested (curl or UI)
 3. At least one failure/empty/invalid path was tested
 4. `git status` was checked so junk files are not staged
+
+## Known footguns
+- Nest CLI latest needs Node 22+. Always `nvm use` in this repo first.
+- `npm install` may hit `Cannot read properties of null (reading 'edgesOut')`. Retry with `--legacy-peer-deps`, and prefer `prisma@6` / `@prisma/client@6` for now.
+- Do not run `npm audit fix --force` unless asked.
+- After Prisma schema changes: `npx prisma migrate dev` and/or `npx prisma generate`, then restart `npm run start:dev`.
+- SQLite file is local and gitignored. New clones need migrate to create the DB.
+- If POST body fields are `undefined`, check Content-Type JSON and that Nest received the body (test with curl before blaming Prisma).
+
+## Repo map
+- `apps/web` — React UI (Vite)
+- `apps/api` — Nest API
+- `apps/api/prisma/schema.prisma` — DB models
+- `apps/api/src/prisma` — Prisma Nest wiring
+- `apps/api/src/tasks` — tasks HTTP API
+- `CLAUDE.md` — this brief (keep updated when architecture decisions change)
+
+## Standard work loop
+1. Read this file and the files you will touch
+2. State a short plan (5 lines max)
+3. Implement the smallest vertical slice
+4. Run/build or curl/UI-check happy path + one failure path
+5. Run through the Code review checklist above
+6. Commit with a clear message (no `.env` / `*.db`)
+
+## When stuck
+- Prefer fixing the root cause over patching symptoms
+- If two approaches are equal, choose the one closer to Nest/React common docs
+- Ask the user only for product decisions (UX copy, scope, auth requirements), not for routine coding choices
+
