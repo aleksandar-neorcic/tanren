@@ -1,4 +1,4 @@
-# Workout app (pivot from Kurashi)
+# Tanren (鍛錬) — personal gym app
 
 ## What I want
 A personal gym app I will actually use.
@@ -34,20 +34,21 @@ You have permission to reshape this repo. Do not ask for confirmation on routine
 - Tailwind for UI
 - Docker later, not day one
 
-## Already in the repo (reuse or delete as needed)
-- `apps/web` Vite React TS Tailwind scaffold
-- `apps/api` NestJS + Prisma + SQLite
-- Old tasks API (`GET/POST /tasks`, etc.) — replace with gym endpoints
-- Docs that describe Kurashi — rewrite for the gym app
+## Already in the repo
+- `apps/web` Vite React TS Tailwind scaffold (placeholder page only)
+- `apps/api` NestJS + Prisma + SQLite with the gym schema, `GET /health`
+- `docs/decisions.md` — stack rationale
 
 ## Done
-- (Update this section as you finish work)
+- Project renamed to **Tanren** (packages `@tanren/api`, `@tanren/web`, README, UI title, favicon)
+- Kurashi product code and copy removed (tasks API, Task model, boilerplate READMEs/assets, unused `@nestjs/mau` + `@nestjs/config`)
+- Prisma schema: `Exercise`, `Template`, `TemplateExercise`, `WorkoutSession`, `SessionExercise`, `SetLog` (migration `init_gym`)
+- GitHub repo rename: not done yet — no `gh` on this machine (see Next)
 
 ## Next
-1. Rename project/repo + strip Kurashi product code
-2. Prisma models for exercises / templates / sessions / sets
-3. Nest API for those resources
-4. Phone-friendly workout logging UI
-5. PC-friendly history view
-6. Templates CRUD
-7. Auth / charts / PRs later
+1. Rename GitHub repo `kurashi` → `tanren` and update `origin`
+2. Nest API: exercises / templates / sessions / sets (+ seed with starter exercises)
+3. Phone-friendly workout logging UI
+4. PC-friendly history view
+5. Templates + exercises CRUD UI
+6. Auth / charts / PRs later
