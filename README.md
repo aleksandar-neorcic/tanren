@@ -1,8 +1,10 @@
-# Kurashi
+# Tanren (鍛錬)
 
-Personal life app for living and working in Japan.
+Personal gym app: log workouts on your phone, review everything else on a PC.
 
-Ongoing project: tasks first, then packs (Japan life, job hunt, JLPT), English UI with Japanese i18n later.
+- Phone-first workout logging (big tap targets, fast set entry)
+- PC-friendly history, templates, and exercise editing
+- One responsive React web app + a small NestJS API on SQLite
 
 ## Stack
 
@@ -14,8 +16,8 @@ Ongoing project: tasks first, then packs (Japan life, job hunt, JLPT), English U
 ## Setup
 
 ```bash
-git clone git@github.com:aleksandar-neorcic/kurashi.git
-cd kurashi
+git clone git@github.com:aleksandar-neorcic/tanren.git
+cd tanren
 nvm use   # Node 22
 
 # API
@@ -34,23 +36,9 @@ npm run dev
 - API: http://localhost:3000
 - Web: http://localhost:5173
 
-## API smoke tests
-
-```bash
-curl http://localhost:3000/tasks
-
-curl -X POST http://localhost:3000/tasks \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Buy milk"}'
-
-curl -X PATCH http://localhost:3000/tasks/TASK_ID/done \
-  -H "Content-Type: application/json" \
-  -d '{"done":true}'
-```
-
 ## Docs for AI / contributors
 
-- `CLAUDE.md` — project brief, checklist, footguns, work loop
+- `CLAUDE.md` — project brief, done / next
 - `docs/decisions.md` — why these stack choices
 
 ## Notes

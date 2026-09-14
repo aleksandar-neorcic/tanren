@@ -1,4 +1,4 @@
-# Kurashi decisions
+# Tanren decisions
 
 ## Monorepo (apps/web + apps/api)
 One repo is simpler for a personal project: one clone, shared history, easier Docker later.
@@ -21,11 +21,14 @@ More tutorials and fewer ESM footguns for learning Nest.
 ## Tailwind v4
 Modern default with Vite via `@tailwindcss/vite`.
 
-## Auth later, tasks first
-v1 proves full-stack loop (UI ↔ API ↔ DB). Auth and packs come after list/add/done works.
+## One responsive web app, no React Native
+Phone-first layout for logging in the gym, PC layout for history/templates. One codebase, one deploy. Native app only if the web app proves insufficient.
+
+## Single user, no auth in v1
+The app runs locally for one person. Auth is added only when it needs to leave localhost.
 
 ## Docker later
 Learn Dockerfile/compose after the app works locally.
 
 ## i18n EN first
-Ship English UI with string dictionaries early; Japanese translations can lag without blocking features.
+English UI now; Japanese translations can come later without blocking features.
