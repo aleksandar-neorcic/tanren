@@ -36,19 +36,18 @@ You have permission to reshape this repo. Do not ask for confirmation on routine
 
 ## Already in the repo
 - `apps/web` Vite React TS Tailwind scaffold (placeholder page only)
-- `apps/api` NestJS + Prisma + SQLite with the gym schema, `GET /health`
+- `apps/api` NestJS + Prisma + SQLite: gym schema + REST API (see README "API"), `npm run seed` for starter data
 - `docs/decisions.md` — stack rationale
 
 ## Done
 - Project renamed to **Tanren** (packages `@tanren/api`, `@tanren/web`, README, UI title, favicon)
 - Kurashi product code and copy removed (tasks API, Task model, boilerplate READMEs/assets, unused `@nestjs/mau` + `@nestjs/config`)
 - Prisma schema: `Exercise`, `Template`, `TemplateExercise`, `WorkoutSession`, `SessionExercise`, `SetLog` (migration `init_gym`)
-- GitHub repo rename: not done yet — no `gh` on this machine (see Next)
+- GitHub repo renamed to `aleksandar-neorcic/tanren`; local folder is `~/tanren`
+- Nest API: exercises (archive, not delete), templates (full-replace PUT), sessions/sets. Starting from a template pre-creates sets prefilled from the last finished session; only one active session at a time. Hand-rolled validation in `src/common/validate.ts` (no class-validator yet)
 
 ## Next
-1. Rename GitHub repo `kurashi` → `tanren` and update `origin`
-2. Nest API: exercises / templates / sessions / sets (+ seed with starter exercises)
-3. Phone-friendly workout logging UI
-4. PC-friendly history view
-5. Templates + exercises CRUD UI
-6. Auth / charts / PRs later
+1. Phone-friendly workout logging UI
+2. PC-friendly history view
+3. Templates + exercises CRUD UI
+4. Auth / charts / PRs later

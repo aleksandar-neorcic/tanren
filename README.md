@@ -25,6 +25,7 @@ cd apps/api
 cp .env.example .env
 npm install --legacy-peer-deps
 npx prisma migrate dev
+npm run seed        # optional: starter exercises + Push/Pull/Legs templates
 npm run start:dev
 
 # Web (other terminal)
@@ -35,6 +36,32 @@ npm run dev
 
 - API: http://localhost:3000
 - Web: http://localhost:5173
+
+## API
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/health` | liveness |
+| GET/POST | `/exercises` | list (`?includeArchived=true`) / create |
+| GET/PATCH/DELETE | `/exercises/:id` | read / update / archive |
+| GET/POST | `/templates` | list with exercises / create |
+| GET/PUT/DELETE | `/templates/:id` | read / replace / delete |
+| GET | `/sessions?limit=50` | history, newest first, with set count + volume |
+| GET | `/sessions/active` | the unfinished session or `null` |
+| POST | `/sessions` | start `{ templateId? , name? }` — sets prefilled from last time |
+| GET/PATCH/DELETE | `/sessions/:id` | read / rename+notes / delete |
+| POST | `/sessions/:id/finish` | mark finished |
+| POST | `/sessions/:id/exercises` | add `{ exerciseId }` mid-session |
+| PATCH/DELETE | `/session-exercises/:id` | `{ done }` / remove |
+| POST | `/session-exercises/:id/sets` | append a set (copies the previous one) |
+| PATCH/DELETE | `/sets/:id` | `{ weight, reps, done }` / remove |
+
+Mutations on a session return the full updated session.
+
+```bash
+curl -X POST localhost:3000/sessions -H "Content-Type: application/json" -d '{"templateId":"..."}'
+curl -X PATCH localhost:3000/sets/SET_ID -H "Content-Type: application/json" -d '{"weight":80,"reps":8,"done":true}'
+```
 
 ## Docs for AI / contributors
 
