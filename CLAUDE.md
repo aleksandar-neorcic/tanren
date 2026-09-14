@@ -16,8 +16,15 @@ Product v1:
 4. Session history (PC-friendly)
 5. Auth later is OK if needed; local single-user is fine for first slice
 
-## Your job (do this end-to-end)
-You have permission to reshape this repo. Do not ask for confirmation on routine cleanup.
+## How to work with me (IMPORTANT)
+**I am building this app to learn React and NestJS. Guide me, don't build it for me.**
+
+- I write the application code (Nest modules, React components/pages). You explain concepts, suggest the next small step, point at the relevant file/docs, and review what I wrote — explaining *why*, not just fixing.
+- Do not write non-trivial app code unless I explicitly ask for a specific snippet.
+- Routine chores are still yours to just do: renames, gitignore, docs, config plumbing, dependency installs.
+- The README "API" table is the spec I'm building the API against.
+
+## Original pivot brief (mostly done — see Done)
 
 1. **Rename the project** away from Kurashi to a gym-related name (pick something short and clear, e.g. `setsuke` / `repbook` / `gymlog` — choose one and use it consistently in package names, README, UI title).
 2. **Rename the GitHub repo** if possible (`gh repo rename ...`) to match. Update remotes/README links.
@@ -36,7 +43,8 @@ You have permission to reshape this repo. Do not ask for confirmation on routine
 
 ## Already in the repo
 - `apps/web` Vite React TS Tailwind scaffold (placeholder page only)
-- `apps/api` NestJS + Prisma + SQLite: gym schema + REST API (see README "API"), `npm run seed` for starter data
+- `apps/api` NestJS + Prisma + SQLite: gym schema, `GET /health`, `npm run seed` for starter data. **No resource modules yet — I'm writing those to learn Nest.**
+- `apps/web` Vite React TS Tailwind: `vite.config.ts` proxies `/api` → Nest (and exposes on LAN for phone use), `src/api/types.ts` has the API response types, `react-router` installed. **No pages yet — I'm writing those to learn React.**
 - `docs/decisions.md` — stack rationale
 
 ## Done
@@ -44,10 +52,13 @@ You have permission to reshape this repo. Do not ask for confirmation on routine
 - Kurashi product code and copy removed (tasks API, Task model, boilerplate READMEs/assets, unused `@nestjs/mau` + `@nestjs/config`)
 - Prisma schema: `Exercise`, `Template`, `TemplateExercise`, `WorkoutSession`, `SessionExercise`, `SetLog` (migration `init_gym`)
 - GitHub repo renamed to `aleksandar-neorcic/tanren`; local folder is `~/tanren`
-- Nest API: exercises (archive, not delete), templates (full-replace PUT), sessions/sets. Starting from a template pre-creates sets prefilled from the last finished session; only one active session at a time. Hand-rolled validation in `src/common/validate.ts` (no class-validator yet)
+- A first-pass Nest API was built by Claude, then removed in favour of me rebuilding it as a learning exercise (commit 356efc2 has it if a reference is ever needed — prefer not to look)
 
-## Next
-1. Phone-friendly workout logging UI
-2. PC-friendly history view
-3. Templates + exercises CRUD UI
-4. Auth / charts / PRs later
+## Next (I write, Claude guides)
+1. Nest: `exercises` module (controller + service + Prisma) — list/create/update/archive
+2. Nest: `templates` module
+3. Nest: `sessions` module (start from template, log sets, finish)
+4. React: routing + layout (bottom tabs on phone, top nav on PC)
+5. React: start-workout + session logging page (phone)
+6. React: history, templates, exercises pages (PC)
+7. Auth / charts / PRs later
