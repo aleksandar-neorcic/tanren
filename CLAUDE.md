@@ -59,11 +59,16 @@ Product v1:
   - Prisma error codes map to status: `P2002` → 409, `P2025` → 404; anything else rethrown so it stays a 500
   - DTO nulls follow the schema, not optionality: nullable columns use `@IsOptional()` so `null` clears them, non-nullable ones use `@ValidateIf((o) => o.x !== undefined)` so an explicit `null` is a 400
   - `DELETE` soft-archives; `PATCH { archived: false }` restores
+- Nest `templates` module — list, read, create, replace (`PUT`), delete. Adds to the conventions above:
+  - nested child arrays: `@IsArray` + `@ValidateNested({ each: true })` + `@Type(() => Dto)`; without `@Type` the elements are never validated
+  - the client sends `exercises` as an ordered array and the server derives `order` from the index, so the two can never disagree
+  - `PUT` replaces the whole template in one nested write (`exercises: { deleteMany: {}, create: [...] }`), and an omitted field means "clear it", not "leave it"
+  - `P2003` (bad foreign key) → 400; `isPrismaError` now lives in `src/prisma/prisma-error.ts` and is shared
+  - hard `DELETE` here, not archive: `Template` has no `archived`, and sessions keep their history via `onDelete: SetNull`
 
 ## Next (I write, Claude guides)
-1. Nest: `templates` module
-2. Nest: `sessions` module (start from template, log sets, finish)
-3. React: routing + layout (bottom tabs on phone, top nav on PC)
-4. React: start-workout + session logging page (phone)
-5. React: history, templates, exercises pages (PC)
-6. Auth / charts / PRs later
+1. Nest: `sessions` module (start from template, log sets, finish)
+2. React: routing + layout (bottom tabs on phone, top nav on PC)
+3. React: start-workout + session logging page (phone)
+4. React: history, templates, exercises pages (PC)
+5. Auth / charts / PRs later
