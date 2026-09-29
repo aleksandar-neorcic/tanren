@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { isPrismaError } from '../prisma/prisma-error';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 
@@ -61,8 +61,4 @@ export class ExercisesService {
       throw e;
     }
   }
-}
-
-function isPrismaError(e: unknown, code: string): e is Prisma.PrismaClientKnownRequestError {
-  return e instanceof Prisma.PrismaClientKnownRequestError && e.code === code;
 }
