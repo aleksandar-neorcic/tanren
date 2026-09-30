@@ -56,7 +56,17 @@ npm run dev
 | POST | `/session-exercises/:id/sets` | append a set (copies the previous one) |
 | PATCH/DELETE | `/sets/:id` | `{ weight, reps, done }` / remove |
 
-Mutations on a session return the full updated session.
+Mutations on a session return the full updated session, so the phone never has to
+merge a patch into local state.
+
+- Only one session may be unfinished at a time. Starting a second one is a `409`
+  carrying `activeSessionId`, so the client can jump to the live session instead.
+- `POST /sessions/:id/finish` is idempotent: a retry over bad gym wifi returns the
+  session unchanged rather than re-stamping `finishedAt`.
+- Prefill on start: how many sets comes from the template's `targetSets`, the weight
+  and reps come from the last finished session for that exercise, falling back to the
+  template's own targets when there is no history.
+- `setCount` and `volume` in the history list count only sets marked `done`.
 
 ```bash
 curl -X POST localhost:3000/sessions -H "Content-Type: application/json" -d '{"templateId":"..."}'

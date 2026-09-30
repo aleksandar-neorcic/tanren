@@ -43,7 +43,7 @@ Product v1:
 
 ## Already in the repo
 - `apps/web` Vite React TS Tailwind scaffold (placeholder page only)
-- `apps/api` NestJS + Prisma + SQLite: gym schema, `GET /health`, `npm run seed` for starter data, global `ValidationPipe`. **`exercises` is the only resource module so far — I'm writing the rest to learn Nest.**
+- `apps/api` NestJS + Prisma + SQLite: gym schema, `GET /health`, `npm run seed` for starter data, global `ValidationPipe`. The API is feature-complete against the README table (`exercises`, `templates`, `sessions`).
 - `apps/web` Vite React TS Tailwind: `vite.config.ts` proxies `/api` → Nest (and exposes on LAN for phone use), `src/api/types.ts` has the API response types, `react-router` installed. **No pages yet — I'm writing those to learn React.**
 - `docs/decisions.md` — stack rationale
 
@@ -65,10 +65,16 @@ Product v1:
   - `PUT` replaces the whole template in one nested write (`exercises: { deleteMany: {}, create: [...] }`), and an omitted field means "clear it", not "leave it"
   - `P2003` (bad foreign key) → 400; `isPrismaError` now lives in `src/prisma/prisma-error.ts` and is shared
   - hard `DELETE` here, not archive: `Template` has no `archived`, and sessions keep their history via `onDelete: SetNull`
+- Nest `sessions` module — written by Claude at my request, unlike the two above. Covers the whole README table: start (from a template or freeform), log sets, add exercises mid-session, finish, history, delete. What it adds to the conventions:
+  - three controllers (`/sessions`, `/session-exercises`, `/sets`) in **one** module: child rows are addressed by their own id on flat routes, and every mutation ends by returning the whole session via `SessionsService.getFull`
+  - route order matters — `@Get('active')` must be declared above `@Get(':id')` or Nest hands `'active'` to the service as an id
+  - returning `null` from a handler sends an **empty body**, not `null`: Nest's Express adapter treats nil as "nothing to send". `/sessions/active` uses `@Res()` + `res.json()` so the web app can still parse it
+  - appending derives `order`/`setNumber` from `max + 1`, not an array index the way templates do; gaps left by deletes are fine because reads sort and never assume contiguity
+  - invariants the schema cannot hold live in the service: one unfinished session at a time (409 with `activeSessionId`), and `finish` is idempotent so a retry cannot rewrite `finishedAt`
+  - derived fields (`setCount`, `volume` over `done` sets only) are computed in JS in `session.include.ts`, next to the include shape they depend on
 
 ## Next (I write, Claude guides)
-1. Nest: `sessions` module (start from template, log sets, finish)
-2. React: routing + layout (bottom tabs on phone, top nav on PC)
-3. React: start-workout + session logging page (phone)
-4. React: history, templates, exercises pages (PC)
-5. Auth / charts / PRs later
+1. React: routing + layout (bottom tabs on phone, top nav on PC)
+2. React: start-workout + session logging page (phone)
+3. React: history, templates, exercises pages (PC)
+4. Auth / charts / PRs later
