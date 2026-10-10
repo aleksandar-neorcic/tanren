@@ -34,6 +34,11 @@ Product v1:
 6. **Update README** and this `CLAUDE.md` (Done / Next) as you go.
 7. **Commit and push** in small clear commits. Never commit `.env` or `*.db`.
 
+## Design reference (IMPORTANT for any UI work)
+- `docs/design/` is the visual spec. Read `docs/design/README.md` and look at the PNGs in `docs/design/screens/` before suggesting, reviewing, or writing any UI.
+- Match its style: black/zinc dark theme with a single lime accent, Session v1 "one exercise at a time" logging, a floating pill tab bar on phone and a left sidebar on PC.
+- Logo and favicon assets are in `docs/design/brand/`. When something in the code disagrees with the mockups, point it out instead of silently picking one.
+
 ## Stack constraints
 - Monorepo `apps/web` + `apps/api` (keep one repo)
 - npm only, Node 22 (`.nvmrc`)
