@@ -8,12 +8,16 @@ export default function Session() {
   return (
     // No tabs on this page: it sits outside AppLayout so set entry gets the
     // whole screen. Hence its own background and padding.
-    <div className="min-h-screen bg-slate-100 px-4 py-6 text-slate-900">
-      <Link to="/" className="text-sm text-slate-600 underline">
-        Leave
-      </Link>
-      <h1 className="mt-4 text-2xl font-semibold">Session</h1>
-      <p className="mt-2 text-slate-600">Logging session {id}.</p>
+    <div className="min-h-screen bg-black px-4 py-4 text-white">
+      <div className="flex items-center justify-between">
+        <h1 className="text-sm font-bold tracking-wide uppercase">Session</h1>
+        <Link to="/" className="text-sm text-zinc-500">
+          Leave
+        </Link>
+      </div>
+      <p className="mt-8 text-3xl font-black tracking-tight uppercase">
+        Logging {id}
+      </p>
     </div>
   )
 }

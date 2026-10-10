@@ -82,8 +82,12 @@ Product v1:
   - data mode (`createBrowserRouter` + `RouterProvider`), chosen so adding `loader`s later needs no rewrite of the tree; no loaders yet, data fetching still to come
   - a **pathless layout route** holds the chrome: `AppLayout` renders for every child and the matched page fills its `<Outlet />`, so the nav never remounts on navigation
   - `session/:id` is a **sibling** of the layout, not a child, so the logging screen renders with no tabs to mistap mid-workout — the route tree says which pages have chrome, not a conditional inside the layout
-  - one `tabs` array feeds both navs so they cannot drift; Tailwind picks which is visible (`hidden md:block` / `md:hidden`), no JS media query
-  - `NavLink`'s `className` takes a function of `{ isActive }` for the active style, and `end` on the `/` tab stops it matching every route
+  - one `navItems` array feeds both navs so they cannot drift; Tailwind picks which is visible (`hidden md:flex` / `md:hidden`), no JS media query
+  - styled to `docs/design/`: black/zinc with a lime accent, a floating pill bar of three tabs on phone (inactive tabs icon-only, the active one a lime pill with its label) and a four-item sidebar on PC
+  - active state is computed from `useLocation()` instead of `NavLink`, because Templates has to light up for `/exercises`, which has no phone tab of its own — `NavLink` can only match its own path. That `owns` rule is scoped to the phone bar; the sidebar has a real Exercises item and would otherwise light two
+  - brand assets are copied into `apps/web/public/`; `docs/design/brand/` stays the source of truth
+  - icons come from `lucide-react` (the maintained Feather fork, the style the mockups were traced in) but are re-exported under Tanren names from `src/components/icons.tsx`, so swapping an icon or the library is a one-line change. Lucide is stroke-only, so the solid play triangle passes `fill="currentColor"`
+  - **deliberate deviation from the mockups**: the PC sidebar has icons, where `screens-pc.png` is text-only. Exercises uses a dumbbell rather than the grid Templates uses, because in the sidebar the two are visible at once and would otherwise be identical
   - everything imports from `react-router`, not `react-router-dom` — that package is a shim since v7 and most tutorials are stale
 
 ## Next (I write, Claude guides)
