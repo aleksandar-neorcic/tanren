@@ -44,7 +44,7 @@ Product v1:
 ## Already in the repo
 - `apps/web` Vite React TS Tailwind scaffold (placeholder page only)
 - `apps/api` NestJS + Prisma + SQLite: gym schema, `GET /health`, `npm run seed` for starter data, global `ValidationPipe`. The API is feature-complete against the README table (`exercises`, `templates`, `sessions`).
-- `apps/web` Vite React TS Tailwind: `vite.config.ts` proxies `/api` → Nest (and exposes on LAN for phone use), `src/api/types.ts` has the API response types, `react-router` installed. **No pages yet — I'm writing those to learn React.**
+- `apps/web` Vite React TS Tailwind: `vite.config.ts` proxies `/api` → Nest (and exposes on LAN for phone use), `src/api/types.ts` has the API response types, `react-router` routing and the layout shell are in place. **Pages are stubs — the real screens are mine to write.**
 - `docs/decisions.md` — stack rationale
 
 ## Done
@@ -73,8 +73,16 @@ Product v1:
   - invariants the schema cannot hold live in the service: one unfinished session at a time (409 with `activeSessionId`), and `finish` is idempotent so a retry cannot rewrite `finishedAt`
   - derived fields (`setCount`, `volume` over `done` sets only) are computed in JS in `session.include.ts`, next to the include shape they depend on
 
+- React routing + layout shell — written by Claude at my request. Route tree in `apps/web/src/routes.tsx`, chrome in `src/layouts/AppLayout.tsx`, stub pages in `src/pages/`:
+  - data mode (`createBrowserRouter` + `RouterProvider`), chosen so adding `loader`s later needs no rewrite of the tree; no loaders yet, data fetching still to come
+  - a **pathless layout route** holds the chrome: `AppLayout` renders for every child and the matched page fills its `<Outlet />`, so the nav never remounts on navigation
+  - `session/:id` is a **sibling** of the layout, not a child, so the logging screen renders with no tabs to mistap mid-workout — the route tree says which pages have chrome, not a conditional inside the layout
+  - one `tabs` array feeds both navs so they cannot drift; Tailwind picks which is visible (`hidden md:block` / `md:hidden`), no JS media query
+  - `NavLink`'s `className` takes a function of `{ isActive }` for the active style, and `end` on the `/` tab stops it matching every route
+  - everything imports from `react-router`, not `react-router-dom` — that package is a shim since v7 and most tutorials are stale
+
 ## Next (I write, Claude guides)
-1. React: routing + layout (bottom tabs on phone, top nav on PC)
-2. React: start-workout + session logging page (phone)
-3. React: history, templates, exercises pages (PC)
+1. React: start-workout + session logging page (phone)
+2. React: history, templates, exercises pages (PC)
+3. Turn on `strict` in `apps/web/tsconfig.app.json` — it is missing from every tsconfig there, so `strictNullChecks` is off and the `| null` fields all over `src/api/types.ts` go unchecked. Worth doing while the page count is small
 4. Auth / charts / PRs later
