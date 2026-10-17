@@ -77,22 +77,38 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
   const lastSet = current ? (current.sets[current.sets.length - 1] ?? null) : null
   const canRemoveSet = lastSet !== null && !lastSet.done && (current?.sets.length ?? 0) > 1
 
+  /**
+   * Close an exercise out once nothing is left to log in it.
+   *
+   * Two different actions can leave it in that state — logging its last set, or
+   * deleting the last set that was still unlogged — and `done` is what moves
+   * you on to the next exercise, so both have to apply the same rule. It works
+   * off the session the server just returned, never off what was rendered.
+   */
+  async function settleExercise(after: WorkoutSession, exerciseId: string) {
+    const exercise = after.exercises.find((e) => e.id === exerciseId)
+    const finished =
+      exercise !== undefined &&
+      !exercise.done &&
+      exercise.sets.length > 0 &&
+      exercise.sets.every((s) => s.done)
+
+    return finished ? sessionExercisesApi.update(exercise.id, { done: true }) : after
+  }
+
   async function removeLastSet() {
-    if (lastSet === null) return
-    await run(() => setsApi.remove(lastSet.id))
+    if (lastSet === null || current === null) return
+    const exerciseId = current.id
+    // Deleting the last unlogged set can finish the exercise off, which is how
+    // "remove a set" used to strand the screen: every set done, the exercise
+    // still open, and nothing left to log into.
+    await run(async () => settleExercise(await setsApi.remove(lastSet.id), exerciseId))
   }
 
   async function completeSet(exercise: SessionExercise, set: SetLog, weight: number, reps: number) {
-    await run(async () => {
-      const afterSet = await setsApi.update(set.id, { weight, reps, done: true })
-      // Was that the exercise's last set? Decide from the answer that just came
-      // back, not from the `exercise` we rendered — that one is already stale.
-      const updated = afterSet.exercises.find((e) => e.id === exercise.id)
-      if (updated && updated.sets.every((s) => s.done)) {
-        return sessionExercisesApi.update(updated.id, { done: true })
-      }
-      return afterSet
-    })
+    await run(async () =>
+      settleExercise(await setsApi.update(set.id, { weight, reps, done: true }), exercise.id),
+    )
   }
 
   async function finish() {
@@ -150,7 +166,7 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
           <p className="mt-10 text-center text-sm text-zinc-500">
             Nothing planned yet. Add an exercise to start logging.
           </p>
-        ) : current === null || currentSet === null ? (
+        ) : current === null ? (
           <div className="mt-12 text-center">
             <p className="text-3xl font-black uppercase tracking-tight">Workout complete</p>
             <p className="mt-1 mb-8 text-sm text-zinc-500">
@@ -163,6 +179,26 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
               className="h-20 w-full rounded-3xl bg-lime-400 text-2xl font-black uppercase text-black disabled:opacity-50"
             >
               Finish workout
+            </button>
+          </div>
+        ) : currentSet === null ? (
+          // Every set in this exercise is logged, but it is not closed out: the
+          // PATCH that marks it done did not land. Recoverable, and *not* the
+          // whole workout being over — conflating the two is what made removing
+          // a set jump straight to "Workout complete".
+          //
+          // Order matters here: `current === null` is tested first, so by this
+          // branch TypeScript knows there is an exercise to talk about.
+          <div className="mt-12 text-center">
+            <p className="text-3xl font-black uppercase tracking-tight">{current.exercise.name}</p>
+            <p className="mt-1 mb-8 text-sm text-zinc-500">Every set here is logged.</p>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => run(() => sessionExercisesApi.update(current.id, { done: true }))}
+              className="h-20 w-full rounded-3xl bg-lime-400 text-2xl font-black uppercase text-black disabled:opacity-50"
+            >
+              {next ? 'Next exercise' : 'Finish up'}
             </button>
           </div>
         ) : (
