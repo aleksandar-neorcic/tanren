@@ -78,12 +78,16 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
   const canRemoveSet = lastSet !== null && !lastSet.done && (current?.sets.length ?? 0) > 1
 
   /**
-   * Close an exercise out once nothing is left to log in it.
+   * Close an exercise out once its last set has been *logged*.
    *
-   * Two different actions can leave it in that state — logging its last set, or
-   * deleting the last set that was still unlogged — and `done` is what moves
-   * you on to the next exercise, so both have to apply the same rule. It works
-   * off the session the server just returned, never off what was rendered.
+   * Only logging gets to do this. Tapping "Done set" is you saying you are
+   * finished; deleting a set is housekeeping, and reading it as "finished"
+   * moves you on from an exercise you never said you were done with — with no
+   * way back if the delete was a mistap. So the delete path deliberately does
+   * not call this and lets you choose instead.
+   *
+   * It works off the session the server just returned, never off what was
+   * rendered: by the time the await resolves, that is already stale.
    */
   async function settleExercise(after: WorkoutSession, exerciseId: string) {
     const exercise = after.exercises.find((e) => e.id === exerciseId)
@@ -97,12 +101,11 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
   }
 
   async function removeLastSet() {
-    if (lastSet === null || current === null) return
-    const exerciseId = current.id
-    // Deleting the last unlogged set can finish the exercise off, which is how
-    // "remove a set" used to strand the screen: every set done, the exercise
-    // still open, and nothing left to log into.
-    await run(async () => settleExercise(await setsApi.remove(lastSet.id), exerciseId))
+    if (lastSet === null) return
+    // No settleExercise here, on purpose. If this was the last unlogged set the
+    // exercise stays open with nothing to log into, and the screen asks what
+    // you want to do about it rather than deciding for you.
+    await run(() => setsApi.remove(lastSet.id))
   }
 
   async function completeSet(exercise: SessionExercise, set: SetLog, weight: number, reps: number) {
@@ -182,10 +185,11 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
             </button>
           </div>
         ) : currentSet === null ? (
-          // Every set in this exercise is logged, but it is not closed out: the
-          // PATCH that marks it done did not land. Recoverable, and *not* the
-          // whole workout being over — conflating the two is what made removing
-          // a set jump straight to "Workout complete".
+          // Nothing left to log in this exercise, but it is still open: you
+          // deleted its last unlogged set, or the PATCH that marks it done did
+          // not land. Either way it is a question, not a conclusion — and *not*
+          // the whole workout being over. Conflating the two is what made
+          // removing a set jump straight to "Workout complete".
           //
           // Order matters here: `current === null` is tested first, so by this
           // branch TypeScript knows there is an exercise to talk about.
@@ -199,6 +203,18 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
               className="h-20 w-full rounded-3xl bg-lime-400 text-2xl font-black uppercase text-black disabled:opacity-50"
             >
               {next ? 'Next exercise' : 'Finish up'}
+            </button>
+            {/* The way out of a mistapped delete. appendSet copies the previous
+                set's numbers and leaves it unlogged, so this lands you straight
+                back on the steppers where you were. */}
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => run(() => sessionExercisesApi.appendSet(current.id))}
+              className="mt-4 flex w-full items-center justify-center gap-1.5 py-2 text-sm text-zinc-400 disabled:opacity-40"
+            >
+              <PlusIcon size={14} />
+              add a set back
             </button>
           </div>
         ) : (
