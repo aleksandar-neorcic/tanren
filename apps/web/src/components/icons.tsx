@@ -6,8 +6,14 @@
 // docs/design/source/ were traced in — close enough that the paths are used
 // as-is, with no tweaking to match.
 export {
+  Check as CheckIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
   Clock as ClockIcon,
   Dumbbell as DumbbellIcon,
   LayoutGrid as GridIcon,
+  Minus as MinusIcon,
   Play as PlayIcon,
+  Plus as PlusIcon,
+  X as CloseIcon,
 } from 'lucide-react'
