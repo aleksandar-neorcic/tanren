@@ -102,6 +102,7 @@ Product v1:
   - **`key` is how state is reset**: the screen is keyed by session id and the stepper block by set id, because `useState(initial)` only reads its argument on the first render — new props would not reset it, a new key does
   - the ± values stay local until "Done set": getting to 82.5kg is three taps, and three PATCHes for a number you have not committed to is three chances to fail on gym wifi
   - after the last set of an exercise is logged, the client marks the exercise `done` — decided from the response it just got, not from the state it rendered
+  - "Delete this session" for a workout started by accident: `DELETE /sessions/:id` behind a two-tap confirm that names how many sets go with it, then `navigate('/', { replace: true })` so the dead route is not left in the back stack. Only offered while the session is live — deleting from history belongs with the History page
 - `strict` turned on in `tsconfig.app.json` and `tsconfig.node.json`; `react-refresh/only-export-components` now allows a `loader` export beside the page component
 - **Deviations from the mockups, deliberate:** the "last time 77.5kg × 8" hint is missing (no endpoint exposes it — the prefilled numbers *are* last time's, but the API never says so); +/− are Lucide icons rather than the `−`/`+` glyphs in the source HTML, for consistency with the rest of the app; error strips use red, which the design does not define
 

@@ -15,5 +15,6 @@ export {
   Minus as MinusIcon,
   Play as PlayIcon,
   Plus as PlusIcon,
+  Trash2 as TrashIcon,
   X as CloseIcon,
 } from 'lucide-react'

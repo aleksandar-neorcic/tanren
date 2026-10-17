@@ -26,6 +26,8 @@ export const sessionsApi = {
   /** Omit `templateId` for a freeform session. */
   start: (body: { templateId?: string; name?: string }) => api.post<Session>('/sessions', body),
   finish: (id: string) => api.post<Session>(`/sessions/${id}/finish`),
+  /** Hard delete, cascading to its exercises and sets. There is no undo. */
+  remove: (id: string) => api.delete<void>(`/sessions/${id}`),
   addExercise: (id: string, exerciseId: string) =>
     api.post<Session>(`/sessions/${id}/exercises`, { exerciseId }),
 }

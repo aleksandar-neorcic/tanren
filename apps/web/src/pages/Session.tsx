@@ -4,7 +4,7 @@ import { errorMessage } from '../api/client.ts'
 import { sessionExercisesApi, sessionsApi, setsApi } from '../api/endpoints.ts'
 import type { Session as WorkoutSession, SessionExercise, SetLog } from '../api/types.ts'
 import AddExerciseSheet from '../components/AddExerciseSheet.tsx'
-import { CheckIcon, ChevronLeftIcon, MinusIcon, PlusIcon } from '../components/icons.tsx'
+import { CheckIcon, ChevronLeftIcon, MinusIcon, PlusIcon, TrashIcon } from '../components/icons.tsx'
 import { formatElapsed, round1 } from '../lib/format.ts'
 import { useNow } from '../lib/useNow.ts'
 
@@ -33,6 +33,10 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [picking, setPicking] = useState(false)
+  // Deleting is irreversible, so the button arms a confirmation instead of
+  // doing the thing. Local state, because it is a property of this screen
+  // right now and of nothing else.
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false)
 
   const live = session.finishedAt === null
   const now = useNow(live)
@@ -86,6 +90,22 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
       setError(errorMessage(e))
       // Only on failure: on success this component is on its way out.
       setBusy(false)
+    }
+  }
+
+  /** Started the wrong template, or tapped start by accident. */
+  async function discard() {
+    setBusy(true)
+    setError(null)
+    try {
+      await sessionsApi.remove(session.id)
+      // `replace`, not a push: the session is gone, so leaving /session/:id in
+      // the back stack only means a 404 the next time you swipe back.
+      navigate('/', { replace: true })
+    } catch (e) {
+      setError(errorMessage(e))
+      setBusy(false)
+      setConfirmingDiscard(false)
     }
   }
 
@@ -199,24 +219,65 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
         )}
 
         {live && (
-          <div className="mt-10 flex items-center justify-between border-t border-zinc-900 pt-4 text-sm">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => setPicking(true)}
-              className="flex items-center gap-1 text-zinc-400 disabled:opacity-40"
-            >
-              <PlusIcon size={16} />
-              Add exercise
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={finish}
-              className="text-zinc-500 disabled:opacity-40"
-            >
-              Finish workout
-            </button>
+          <div className="mt-10 border-t border-zinc-900 pt-4">
+            <div className="flex items-center justify-between text-sm">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setPicking(true)}
+                className="flex items-center gap-1 text-zinc-400 disabled:opacity-40"
+              >
+                <PlusIcon size={16} />
+                Add exercise
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={finish}
+                className="text-zinc-500 disabled:opacity-40"
+              >
+                Finish workout
+              </button>
+            </div>
+
+            {confirmingDiscard ? (
+              <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4">
+                <p className="text-sm text-red-300">
+                  Delete this session?{' '}
+                  {doneSetCount(exercises) === 0
+                    ? 'Nothing has been logged yet, so nothing is lost.'
+                    : `Its ${doneSetCount(exercises)} logged sets go with it, and there is no undo.`}
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setConfirmingDiscard(false)}
+                    className="h-12 flex-1 rounded-2xl bg-zinc-800 font-bold text-white disabled:opacity-40"
+                  >
+                    Keep it
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={discard}
+                    className="h-12 flex-1 rounded-2xl bg-red-500 font-bold text-white disabled:opacity-40"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setConfirmingDiscard(true)}
+                className="mt-4 flex w-full items-center justify-center gap-1.5 py-2 text-sm text-zinc-600 disabled:opacity-40"
+              >
+                <TrashIcon size={14} />
+                Delete this session
+              </button>
+            )}
           </div>
         )}
       </div>

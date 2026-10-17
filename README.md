@@ -80,7 +80,7 @@ curl -X PATCH localhost:3000/sets/SET_ID -H "Content-Type: application/json" -d 
 | Route | Chrome | What it does |
 | --- | --- | --- |
 | `/` | tabs / sidebar | Start: active-session banner, start empty, template cards |
-| `/session/:id` | none | Phone logging, one exercise at a time |
+| `/session/:id` | none | Phone logging, one exercise at a time; discard a session started by accident |
 | `/history` `/templates` `/exercises` | tabs / sidebar | still stubs |
 
 - All network calls go through `src/api/client.ts`; `src/api/endpoints.ts` has one
