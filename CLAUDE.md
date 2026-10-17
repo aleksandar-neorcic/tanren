@@ -90,8 +90,24 @@ Product v1:
   - **deliberate deviation from the mockups**: the PC sidebar has icons, where `screens-pc.png` is text-only. Exercises uses a dumbbell rather than the grid Templates uses, because in the sidebar the two are visible at once and would otherwise be identical
   - everything imports from `react-router`, not `react-router-dom` — that package is a shim since v7 and most tutorials are stale
 
+- React data layer — written by Claude at my request. `src/api/client.ts` (one `fetch` wrapper + `ApiError`) and `src/api/endpoints.ts` (one function per row of the README table):
+  - **reads go through route loaders**: `export async function loader` sits next to the page it feeds and is wired in `routes.tsx`, so a page never renders an empty version of itself and there is no `useEffect` fetch to cancel. This is why `createBrowserRouter` was chosen in the first place
+  - **writes do not go through router actions**: every session mutation returns the whole session, so `setSession(await call())` is the entire update. An action would mean a round trip through the router to revalidate data the server already handed back
+  - `fetch` rejects only when there was no reply at all, so `status: 0` means "could not reach the API" and every real status is checked by hand. `response.json()` throws on an empty body, so bodies are read as text and parsed — `GET /sessions/active` returns a real `null`
+  - `ApiError.activeSessionId` reads the id off the 409 from `POST /sessions`, so that contract lives in one file instead of in every component that starts a workout
+  - `errorElement` + `hydrateFallbackElement` on both route branches: without them a dead API shows React Router's stack trace, and a cold load shows nothing at all
+- React Start page (`/`) — active-session banner with a live timer, start empty, template cards. "Last trained" is derived from `GET /sessions` (newest first, so first mention wins) because the templates endpoint does not carry it
+- React Session page (`/session/:id`) — Session v1 logging: progress dots, one exercise at a time, big kg/reps steppers, done-set chips, add set, add-exercise sheet, finish
+  - **which exercise and set you are on is derived**, never stored: it is `findIndex((e) => !e.done)` over the server's own flags. A copy of that in `useState` is a second thing that can be wrong
+  - **`key` is how state is reset**: the screen is keyed by session id and the stepper block by set id, because `useState(initial)` only reads its argument on the first render — new props would not reset it, a new key does
+  - the ± values stay local until "Done set": getting to 82.5kg is three taps, and three PATCHes for a number you have not committed to is three chances to fail on gym wifi
+  - after the last set of an exercise is logged, the client marks the exercise `done` — decided from the response it just got, not from the state it rendered
+- `strict` turned on in `tsconfig.app.json` and `tsconfig.node.json`; `react-refresh/only-export-components` now allows a `loader` export beside the page component
+- **Deviations from the mockups, deliberate:** the "last time 77.5kg × 8" hint is missing (no endpoint exposes it — the prefilled numbers *are* last time's, but the API never says so); +/− are Lucide icons rather than the `−`/`+` glyphs in the source HTML, for consistency with the rest of the app; error strips use red, which the design does not define
+
 ## Next (I write, Claude guides)
-1. React: start-workout + session logging page (phone)
-2. React: history, templates, exercises pages (PC)
-3. Turn on `strict` in `apps/web/tsconfig.app.json` — it is missing from every tsconfig there, so `strictNullChecks` is off and the `| null` fields all over `src/api/types.ts` go unchecked. Worth doing while the page count is small
-4. Auth / charts / PRs later
+1. React: history page (PC) — `GET /sessions` already returns `setCount` and `volume`, and `docs/design/screens/screens-pc.png` is the split-view spec
+2. React: templates editor and exercises library (PC) — `docs/design/screens/screens-1.png`
+3. Session extras from `docs/design/screens/screens-2.png`: rest timer, workout-finished summary, session detail. Finishing currently just lands on `/history`
+4. A "last time" hint on the logging screen — needs the API to return the previous session's numbers per exercise, which it does not today
+5. Auth / charts / PRs later

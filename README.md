@@ -73,6 +73,25 @@ curl -X POST localhost:3000/sessions -H "Content-Type: application/json" -d '{"t
 curl -X PATCH localhost:3000/sets/SET_ID -H "Content-Type: application/json" -d '{"weight":80,"reps":8,"done":true}'
 ```
 
+## Web app
+
+`docs/design/` is the visual spec — match it before changing any screen.
+
+| Route | Chrome | What it does |
+| --- | --- | --- |
+| `/` | tabs / sidebar | Start: active-session banner, start empty, template cards |
+| `/session/:id` | none | Phone logging, one exercise at a time |
+| `/history` `/templates` `/exercises` | tabs / sidebar | still stubs |
+
+- All network calls go through `src/api/client.ts`; `src/api/endpoints.ts` has one
+  function per row of the table above.
+- Reads happen in React Router **loaders**, exported next to the page they feed and
+  wired up in `src/routes.tsx` — the page never renders an empty version of itself.
+- Writes are plain calls. Every session mutation answers with the whole session, so
+  storing that answer *is* the state update; there is nothing to revalidate.
+- `/session/:id` sits outside the layout route, so the logging screen has no tab bar
+  to mistap mid-workout.
+
 ## Docs for AI / contributors
 
 - `CLAUDE.md` — project brief, done / next
