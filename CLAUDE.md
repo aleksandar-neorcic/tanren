@@ -8,6 +8,7 @@ A personal gym app I will actually use.
 - One responsive web app (React). Do **not** build React Native / separate mobile app for v1.
 - English-first UI. Japanese i18n can wait.
 - Same stack as before when useful: React + Vite + TS + Tailwind, NestJS + Prisma + SQLite, npm, Node 22.
+- **It is also a portfolio piece.** I will send it with applications for React developer roles, so the web app has to be finished, demoable, and something I can defend decision by decision. See Next.
 
 Product v1:
 1. Exercises + workout templates
@@ -112,9 +113,36 @@ Product v1:
 - `strict` turned on in `tsconfig.app.json` and `tsconfig.node.json`; `react-refresh/only-export-components` now allows a `loader` export beside the page component
 - **Deviations from the mockups, deliberate:** the "last time 77.5kg × 8" hint is missing (no endpoint exposes it — the prefilled numbers *are* last time's, but the API never says so); +/− are Lucide icons rather than the `−`/`+` glyphs in the source HTML, for consistency with the rest of the app; error strips use red, which the design does not define
 
-## Next (I write, Claude guides)
-1. React: history page (PC) — `GET /sessions` already returns `setCount` and `volume`, and `docs/design/screens/screens-pc.png` is the split-view spec
-2. React: templates editor and exercises library (PC) — `docs/design/screens/screens-1.png`
-3. Session extras from `docs/design/screens/screens-2.png`: rest timer, workout-finished summary, session detail. Finishing currently just lands on `/history`
-4. A "last time" hint on the logging screen — needs the API to return the previous session's numbers per exercise, which it does not today
-5. Auth / charts / PRs later
+## Next — the portfolio plan (I write, Claude guides)
+
+The API is feature-complete against the README table. **The web app is the
+deliverable being judged**, and it is currently 2 of 5 screens: History,
+Templates and Exercises are still stubs. A reviewer who clicks History and sees
+a placeholder stops reading the React and starts thinking "unfinished side
+project", so that gap outranks everything else below.
+
+### P0 — not sendable without these
+1. **History page** (me) — the easiest real screen. `GET /sessions` already returns `setCount` and `volume`, newest first; `docs/design/screens/screens-pc.png` is the split-view spec
+2. **Seed finished sessions** (Claude) — `prisma/seed.ts` makes exercises and templates but no sessions, so a fresh demo's History page is empty, which reads exactly like broken
+3. **Templates editor** (me, **solo**) — the showpiece: nested form state, add/remove/reorder rows, a `PUT` that replaces the whole template. Real form complexity is most of a React job, and this is the page a reviewer should be pointed at. `docs/design/screens/screens-1.png`
+4. **Exercises library** (me) — smallest CRUD, plus the archive/restore the API already has
+5. **Deploy somewhere clickable** — a repo link alone loses most reviewers. "Anyone can edit the demo data" is normal for a demo; do not let the auth question block this
+
+### P1 — expected for a React role specifically
+6. **Tests** — `apps/web` has no test runner at all today. Claude sets up Vitest + Testing Library, I write them. Not coverage numbers; about six that mean something: the set-logging flow, the derived current-exercise logic (where the real bug lived), `ApiError` parsing a Nest validation body
+7. **README screenshot or GIF at the top** — reviewers spend about a minute. 103 lines of prose and no images is the wrong trade
+8. **CI** (Claude) — no `.github/workflows` yet. Typecheck + lint + test is cheap and signals professionalism
+
+### Deliberately not before sending
+Auth, charts, PRs, Docker, i18n, and the `screens-2.png` extras (rest timer,
+workout-finished summary, session detail). None of them change a hiring
+decision, and each one delays P0.
+
+### Risks to manage — not code
+- **Claude wrote most of `apps/web`** (data layer, both screens, dialogs, the fixes). Interviewers will point at `settleExercise`, the `key`-based state reset, or loaders-vs-actions and ask *why this way*. The fix is writing the Templates editor unaided and being able to defend `Session.tsx` cold — those answers land well, they just have to be mine
+- **Every commit carries a `Co-Authored-By: Claude` trailer**, visible to anyone reading the history. Keep it or drop it, but decide — do not discover it mid-interview
+
+### Later, when something actually blocks on it
+- **Auth.** `docs/decisions.md` already says it arrives when the app leaves localhost. Note that using this at a commercial gym is a *reachability* problem first, not an auth one — Tailscale solves that with no code. A shared-secret Nest guard is enough to expose a deploy publicly; a `User` model only matters if someone else ever uses it
+- **A "last time" hint** on the logging screen — needs the API to return the previous session's numbers per exercise, which it does not today
+- **Charts / PRs**
