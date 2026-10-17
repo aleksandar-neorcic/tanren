@@ -18,5 +18,12 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      // A page module exports its component *and* its route loader, which the
+      // rule reads as "not a component file" and would otherwise flag. Named
+      // here rather than silenced per file: `loader` beside the page it feeds
+      // is the convention this app uses, so the config should know about it.
+      'react-refresh/only-export-components': ['warn', { allowExportNames: ['loader'] }],
+    },
   },
 ])
