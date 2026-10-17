@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { errorMessage } from '../api/client.ts'
 import { exercisesApi } from '../api/endpoints.ts'
 import type { Exercise } from '../api/types.ts'
+import { useScrollLock } from '../lib/useScrollLock.ts'
 import { CloseIcon } from './icons.tsx'
 
 interface Props {
@@ -22,6 +23,8 @@ export default function AddExerciseSheet({ busy, onPick, onClose }: Props) {
   const [exercises, setExercises] = useState<Exercise[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
+
+  useScrollLock()
 
   useEffect(() => {
     // StrictMode runs effects twice in development to surface exactly this bug:
@@ -87,8 +90,12 @@ export default function AddExerciseSheet({ busy, onPick, onClose }: Props) {
 
         {/* The only scrolling part. min-h-0 is what lets a flex child actually
             shrink: without it the default min-height:auto keeps it as tall as
-            its content and the whole sheet scrolls again. */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+            its content and the whole sheet scrolls again.
+
+            overscroll-contain stops scroll chaining: without it, reaching the
+            end of this list hands the remaining scroll to the page behind, so
+            one flick past the last exercise drags the background along. */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
           {error && <p className="px-1 py-3 text-sm text-red-400">{error}</p>}
           {!error && exercises === null && (
             <p className="px-1 py-3 text-sm text-zinc-500">Loading…</p>

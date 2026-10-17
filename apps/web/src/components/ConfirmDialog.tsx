@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useScrollLock } from '../lib/useScrollLock.ts'
 
 interface Props {
   title: string
@@ -37,6 +38,7 @@ export default function ConfirmDialog({
   onCancel,
 }: Props) {
   const cancelRef = useRef<HTMLButtonElement>(null)
+  useScrollLock()
 
   useEffect(() => {
     // Focus lands on Cancel, never on the destructive button: a stray Enter or
@@ -52,17 +54,6 @@ export default function ConfirmDialog({
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [onCancel])
-
-  useEffect(() => {
-    // Freeze the page behind. It is covered and unusable, so letting it scroll
-    // only moves content nobody can act on — and on a phone it is what makes an
-    // overlay feel like a stuck page rather than a dialog.
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = previous
-    }
-  }, [])
 
   return (
     <div
