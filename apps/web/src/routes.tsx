@@ -5,7 +5,7 @@ import RouteError from './components/RouteError.tsx'
 import Exercises from './pages/Exercises.tsx'
 import History from './pages/History.tsx'
 import NotFound from './pages/NotFound.tsx'
-import Session from './pages/Session.tsx'
+import Session, { loader as sessionLoader } from './pages/Session.tsx'
 import Start, { loader as startLoader } from './pages/Start.tsx'
 import Templates from './pages/Templates.tsx'
 
@@ -34,6 +34,7 @@ export const router = createBrowserRouter([
     // nav chrome at all, so a mistap can't drop you out of a workout.
     path: 'session/:id',
     element: <Session />,
+    loader: sessionLoader,
     // Its own error element for the same reason it has its own layout: this
     // route is outside the shell, so it cannot inherit the one above.
     errorElement: <RouteError />,
