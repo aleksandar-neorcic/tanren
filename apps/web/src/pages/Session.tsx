@@ -67,6 +67,16 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
   const next = currentIndex === -1 ? null : (exercises[currentIndex + 1] ?? null)
   const currentSet = current?.sets.find((s) => !s.done) ?? null
 
+  // The set − removes: the last one, and only while it is still unlogged. An
+  // exercise always keeps at least one set, so there is something to log into.
+  const lastSet = current ? (current.sets[current.sets.length - 1] ?? null) : null
+  const canRemoveSet = lastSet !== null && !lastSet.done && (current?.sets.length ?? 0) > 1
+
+  async function removeLastSet() {
+    if (lastSet === null) return
+    await run(() => setsApi.remove(lastSet.id))
+  }
+
   async function completeSet(exercise: SessionExercise, set: SetLog, weight: number, reps: number) {
     await run(async () => {
       const afterSet = await setsApi.update(set.id, { weight, reps, done: true })
@@ -188,8 +198,23 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
                     {s.weight ?? 0} × {s.reps ?? 0}
                   </span>
                 ))}
+              {/* Undoes a + set tap, or trims a template that planned for more
+                  sets than you have in you today. Only ever the last set, and
+                  only while it is unlogged: work you actually did should not be
+                  one mistap away from gone. */}
               <button
                 type="button"
+                aria-label="Remove the last set"
+                disabled={busy || !canRemoveSet}
+                onClick={() => removeLastSet()}
+                className="flex items-center gap-1 rounded-full border border-zinc-800 px-3 py-1 text-sm text-zinc-400 disabled:opacity-40"
+              >
+                <MinusIcon size={14} />
+                set
+              </button>
+              <button
+                type="button"
+                aria-label="Add a set"
                 disabled={busy}
                 onClick={() => run(() => sessionExercisesApi.appendSet(current.id))}
                 className="flex items-center gap-1 rounded-full border border-zinc-800 px-3 py-1 text-sm text-zinc-400 disabled:opacity-40"
