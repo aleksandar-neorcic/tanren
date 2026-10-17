@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Link, useLoaderData, useNavigate, type LoaderFunctionArgs } from 'react-router'
 import { errorMessage } from '../api/client.ts'
 import { sessionExercisesApi, sessionsApi, setsApi } from '../api/endpoints.ts'
 import type { Session as WorkoutSession, SessionExercise, SetLog } from '../api/types.ts'
 import AddExerciseSheet from '../components/AddExerciseSheet.tsx'
+import ConfirmDialog from '../components/ConfirmDialog.tsx'
 import { CheckIcon, ChevronLeftIcon, MinusIcon, PlusIcon, TrashIcon } from '../components/icons.tsx'
 import { formatElapsed, round1 } from '../lib/format.ts'
 import { useNow } from '../lib/useNow.ts'
@@ -37,6 +38,10 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
   // doing the thing. Local state, because it is a property of this screen
   // right now and of nothing else.
   const [confirmingDiscard, setConfirmingDiscard] = useState(false)
+  // Stable across renders, because ConfirmDialog's Escape listener depends on
+  // it: a fresh arrow function each render would tear down and re-add that
+  // listener on every keystroke elsewhere on the page.
+  const cancelDiscard = useCallback(() => setConfirmingDiscard(false), [])
 
   const live = session.finishedAt === null
   const now = useNow(live)
@@ -265,47 +270,34 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
               </button>
             </div>
 
-            {confirmingDiscard ? (
-              <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4">
-                <p className="text-sm text-red-300">
-                  Delete this session?{' '}
-                  {doneSetCount(exercises) === 0
-                    ? 'Nothing has been logged yet, so nothing is lost.'
-                    : `Its ${doneSetCount(exercises)} logged sets go with it, and there is no undo.`}
-                </p>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => setConfirmingDiscard(false)}
-                    className="h-12 flex-1 rounded-2xl bg-zinc-800 font-bold text-white disabled:opacity-40"
-                  >
-                    Keep it
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={discard}
-                    className="h-12 flex-1 rounded-2xl bg-red-500 font-bold text-white disabled:opacity-40"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => setConfirmingDiscard(true)}
-                className="mt-4 flex w-full items-center justify-center gap-1.5 py-2 text-sm text-zinc-600 disabled:opacity-40"
-              >
-                <TrashIcon size={14} />
-                Delete this session
-              </button>
-            )}
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setConfirmingDiscard(true)}
+              className="mt-4 flex w-full items-center justify-center gap-1.5 py-2 text-sm text-zinc-600 disabled:opacity-40"
+            >
+              <TrashIcon size={14} />
+              Delete this session
+            </button>
           </div>
         )}
       </div>
+
+      {confirmingDiscard && (
+        <ConfirmDialog
+          title="Delete this session?"
+          body={
+            doneSetCount(exercises) === 0
+              ? 'Nothing has been logged yet, so nothing is lost.'
+              : `Its ${doneSetCount(exercises)} logged sets go with it, and there is no undo.`
+          }
+          confirmLabel="Delete"
+          cancelLabel="Keep it"
+          busy={busy}
+          onConfirm={discard}
+          onCancel={cancelDiscard}
+        />
+      )}
 
       {picking && (
         <AddExerciseSheet
