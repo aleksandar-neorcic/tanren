@@ -42,6 +42,8 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
   // it: a fresh arrow function each render would tear down and re-add that
   // listener on every keystroke elsewhere on the page.
   const cancelDiscard = useCallback(() => setConfirmingDiscard(false), [])
+  const [confirmingFinish, setConfirmingFinish] = useState(false)
+  const cancelFinish = useCallback(() => setConfirmingFinish(false), [])
 
   const live = session.finishedAt === null
   const now = useNow(live)
@@ -114,6 +116,22 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
     )
   }
 
+  const openExercises = exercises.filter((e) => !e.done).length
+
+  /**
+   * Finishing is one-way: there is no endpoint that reopens a session, and
+   * `finish` is idempotent so a retry will not undo it either. Walking out of
+   * the gym mid-workout is a real thing to do, so this asks rather than blocks
+   * — but it asks, because the tap is not recoverable.
+   */
+  function requestFinish() {
+    if (openExercises > 0) {
+      setConfirmingFinish(true)
+    } else {
+      void finish()
+    }
+  }
+
   async function finish() {
     setBusy(true)
     setError(null)
@@ -177,7 +195,7 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
             </p>
             <button
               type="button"
-              onClick={finish}
+              onClick={requestFinish}
               disabled={busy}
               className="h-20 w-full rounded-3xl bg-lime-400 text-2xl font-black uppercase text-black disabled:opacity-50"
             >
@@ -315,7 +333,7 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
               <button
                 type="button"
                 disabled={busy}
-                onClick={finish}
+                onClick={requestFinish}
                 className="text-zinc-500 disabled:opacity-40"
               >
                 Finish workout
@@ -334,6 +352,21 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
           </div>
         )}
       </div>
+
+      {confirmingFinish && (
+        <ConfirmDialog
+          title="Finish this workout?"
+          body={`${openExercises} of ${exercises.length} ${
+            exercises.length === 1 ? 'exercise is' : 'exercises are'
+          } still open. Everything you logged is kept, but a finished session cannot be reopened.`}
+          confirmLabel="Finish"
+          cancelLabel="Keep going"
+          tone="primary"
+          busy={busy}
+          onConfirm={finish}
+          onCancel={cancelFinish}
+        />
+      )}
 
       {confirmingDiscard && (
         <ConfirmDialog

@@ -5,6 +5,11 @@ interface Props {
   body: string
   confirmLabel: string
   cancelLabel?: string
+  /**
+   * How the confirm button looks. Defaults to `danger`, so forgetting to pass
+   * it makes an action look more alarming than it is — never less.
+   */
+  tone?: 'danger' | 'primary'
   busy?: boolean
   onConfirm: () => void
   /** Must be stable (useCallback) — the Escape listener depends on it. */
@@ -26,6 +31,7 @@ export default function ConfirmDialog({
   body,
   confirmLabel,
   cancelLabel = 'Cancel',
+  tone = 'danger',
   busy = false,
   onConfirm,
   onCancel,
@@ -92,7 +98,10 @@ export default function ConfirmDialog({
             type="button"
             disabled={busy}
             onClick={onConfirm}
-            className="h-12 flex-1 rounded-2xl bg-red-500 font-bold text-white disabled:opacity-40"
+            className={[
+              'h-12 flex-1 rounded-2xl font-bold disabled:opacity-40',
+              tone === 'danger' ? 'bg-red-500 text-white' : 'bg-lime-400 text-black',
+            ].join(' ')}
           >
             {confirmLabel}
           </button>
