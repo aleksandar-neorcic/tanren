@@ -11,3 +11,14 @@ html {
 body {
   margin: 0;
 }
+
+/* Browsers give <button> `cursor: default`, and Tailwind v4's preflight no
+   longer overrides it the way v3 did — so every button in the app felt dead
+   under a mouse. Phones do not care; PCs do. Disabled buttons keep the default
+   arrow, because a pointer on something that cannot be clicked is a lie. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
