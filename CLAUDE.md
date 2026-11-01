@@ -110,6 +110,13 @@ Product v1:
   - overlays (`ConfirmDialog`, `AddExerciseSheet`) share `useScrollLock`: an overlay is `fixed`, so without it the page keeps scrolling behind a sheet you cannot scroll. The hook also replaces the scrollbar's width with padding, or hiding the overflow widens the viewport and shifts the page sideways on PC. The sheet's list adds `overscroll-contain`, or a flick past the last exercise hands the leftover scroll to the page behind
   - finishing with exercises still open asks first: finishing is one-way (no endpoint reopens a session, and `finish` is idempotent so a retry will not undo it). `ConfirmDialog` takes a `tone`, defaulting to `danger` so a forgotten prop makes an action look more alarming than it is, never less
   - "Delete this session" for a workout started by accident: `DELETE /sessions/:id` behind a two-tap confirm that names how many sets go with it, then `navigate('/', { replace: true })` so the dead route is not left in the back stack. Only offered while the session is live — deleting from history belongs with the History page
+- Seed data for the demo (`apps/api/prisma/seed.ts`) — twelve finished sessions behind the exercises and templates, so a fresh install opens on a History page with something on it:
+  - `WorkoutSession` has no natural unique key to upsert on, so the session block is skipped whenever `count() > 0` rather than inventing a key the app never reads. Re-running the seed after a real workout must not bury it
+  - every session is finished and every set is `done`: `SessionsService.create` 409s while a session is open, so an unfinished seed row would break "Start" on first tap, and `toSessionSummary` counts only done sets, so undone ones seed rows reading `0 sets · 0 kg`
+  - dates are `now` minus N days, never literals, or the demo's history reads as stale a month after a deploy
+  - progression is derived from how many times ago a lift was trained, with no `Math.random()`: a seed that differs per run makes a screenshot unreproducible. Weights move in per-exercise increments (`[kg, stepKg]`) so every number is one real plates can make
+  - it also gives the logging screen's prefill something to work with — `lastLoggedSets` had nothing to read from on a fresh database
+
 - `strict` turned on in `tsconfig.app.json` and `tsconfig.node.json`; `react-refresh/only-export-components` now allows a `loader` export beside the page component
 - **Deviations from the mockups, deliberate:** the "last time 77.5kg × 8" hint is missing (no endpoint exposes it — the prefilled numbers *are* last time's, but the API never says so); +/− are Lucide icons rather than the `−`/`+` glyphs in the source HTML, for consistency with the rest of the app; error strips use red, which the design does not define
 
@@ -123,15 +130,14 @@ project", so that gap outranks everything else below.
 
 ### P0 — not sendable without these
 1. **History page** (me) — the easiest real screen. `GET /sessions` already returns `setCount` and `volume`, newest first; `docs/design/screens/screens-pc.png` is the split-view spec
-2. **Seed finished sessions** (Claude) — `prisma/seed.ts` makes exercises and templates but no sessions, so a fresh demo's History page is empty, which reads exactly like broken
-3. **Templates editor** (me, **solo**) — the showpiece: nested form state, add/remove/reorder rows, a `PUT` that replaces the whole template. Real form complexity is most of a React job, and this is the page a reviewer should be pointed at. `docs/design/screens/screens-1.png`
-4. **Exercises library** (me) — smallest CRUD, plus the archive/restore the API already has
-5. **Deploy somewhere clickable** — a repo link alone loses most reviewers. "Anyone can edit the demo data" is normal for a demo; do not let the auth question block this
+2. **Templates editor** (me, **solo**) — the showpiece: nested form state, add/remove/reorder rows, a `PUT` that replaces the whole template. Real form complexity is most of a React job, and this is the page a reviewer should be pointed at. `docs/design/screens/screens-1.png`
+3. **Exercises library** (me) — smallest CRUD, plus the archive/restore the API already has
+4. **Deploy somewhere clickable** — a repo link alone loses most reviewers. "Anyone can edit the demo data" is normal for a demo; do not let the auth question block this
 
 ### P1 — expected for a React role specifically
-6. **Tests** — `apps/web` has no test runner at all today. Claude sets up Vitest + Testing Library, I write them. Not coverage numbers; about six that mean something: the set-logging flow, the derived current-exercise logic (where the real bug lived), `ApiError` parsing a Nest validation body
-7. **README screenshot or GIF at the top** — reviewers spend about a minute. 103 lines of prose and no images is the wrong trade
-8. **CI** (Claude) — no `.github/workflows` yet. Typecheck + lint + test is cheap and signals professionalism
+5. **Tests** — `apps/web` has no test runner at all today. Claude sets up Vitest + Testing Library, I write them. Not coverage numbers; about six that mean something: the set-logging flow, the derived current-exercise logic (where the real bug lived), `ApiError` parsing a Nest validation body
+6. **README screenshot or GIF at the top** — reviewers spend about a minute. 103 lines of prose and no images is the wrong trade
+7. **CI** (Claude) — no `.github/workflows` yet. Typecheck + lint + test is cheap and signals professionalism
 
 ### Deliberately not before sending
 Auth, charts, PRs, Docker, i18n, and the `screens-2.png` extras (rest timer,
