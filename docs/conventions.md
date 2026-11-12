@@ -53,7 +53,9 @@ because Session, Exercises and Templates all open them.
 - Components: `PascalCase.tsx`, one component per file, **default export**.
 - Hooks: `useThing.ts`, **default export**, one hook per file.
 - Everything else (`schemas.ts`, `types.ts`, `lib/*`): **named exports**.
-- A page's file is always `index.tsx`, so the import is the folder name.
+- A page's file is always `index.tsx`, and it is imported by its explicit path
+  (`./pages/Start/index.tsx`), not by the bare folder. Directory resolution works,
+  but spelling the file out keeps the extension rule below true everywhere.
 
 ## 3. Barrels
 

@@ -6,7 +6,7 @@ import Exercises from './pages/Exercises.tsx'
 import History from './pages/History.tsx'
 import NotFound from './pages/NotFound.tsx'
 import Session, { loader as sessionLoader } from './pages/Session.tsx'
-import Start, { loader as startLoader } from './pages/Start.tsx'
+import Start, { loader as startLoader } from './pages/Start/index.tsx'
 import Templates from './pages/Templates.tsx'
 
 export const router = createBrowserRouter([

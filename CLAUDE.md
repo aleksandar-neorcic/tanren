@@ -141,7 +141,10 @@ a placeholder stops reading the React and starts thinking "unfinished side
 project", so that gap outranks everything else below.
 
 ### P0 — not sendable without these
-0. **Move the two loaders (`Start.tsx`, `Session.tsx`) onto Query hooks** (me) — do this *before* the new screens, not after. It is two files today; after three more screens are built on loaders it is six, and two data patterns in a five-screen app is the single most askable flaw in the repo
+0. **Move the two loaders onto Query hooks** (me), split either side of Exercises:
+   - **`Start.tsx` first** — one loader, three independent reads, and one hand-rolled `busy`/`error` mutation. The smallest file that exercises `useQuery` *and* `useMutation`, and the first thing that proves the provider is wired
+   - **`Session.tsx` after Exercises** — 585 lines, every mutation returning the whole session, and the derived current-exercise logic sitting on top. Don't learn `useMutation` on the most delicate screen in the repo; learn it on a greenfield one, then come back
+   - the interim state (Session on a loader, everything else on Query) is tracked and temporary. It must not survive past Exercises — two data patterns in a five-screen app is the single most askable flaw in the repo
 1. **History page** (me) — the easiest real screen. `GET /sessions` already returns `setCount` and `volume`, newest first; `docs/design/screens/screens-pc.png` is the split-view spec
 2. **Templates editor** (me, **solo**) — the showpiece: nested form state, add/remove/reorder rows, a `PUT` that replaces the whole template. Real form complexity is most of a React job, and this is the page a reviewer should be pointed at. `docs/design/screens/screens-1.png`
 3. **Exercises library** (me) — smallest CRUD, plus the archive/restore the API already has
