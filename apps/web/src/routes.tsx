@@ -6,7 +6,7 @@ import Exercises from './pages/Exercises.tsx'
 import History from './pages/History.tsx'
 import NotFound from './pages/NotFound.tsx'
 import Session, { loader as sessionLoader } from './pages/Session.tsx'
-import Start, { loader as startLoader } from './pages/Start/index.tsx'
+import Start from './pages/Start/index.tsx'
 import Templates from './pages/Templates.tsx'
 
 export const router = createBrowserRouter([
@@ -14,15 +14,18 @@ export const router = createBrowserRouter([
     // A layout route: no path of its own, so AppLayout renders for every child
     // below and the children swap in through its <Outlet />.
     element: <AppLayout />,
-    // Anything a child loader throws stops here instead of at the root, so the
-    // nav stays on screen and you can tap your way out of a broken page.
+    // A throw from anything below stops here instead of at the root, so the nav
+    // stays on screen and you can tap your way out of a broken page. Pages fetch
+    // through React Query now, and a failed query is a *value*, not a throw — so
+    // each page renders its own error branch and this catches what is left:
+    // render-time crashes below this layout.
     errorElement: <RouteError />,
     hydrateFallbackElement: <Loading />,
     children: [
       // `index` is the child that matches the parent's path exactly, i.e. "/".
-      // The loader runs before the element renders, so Start never has to draw
-      // an empty version of itself first.
-      { index: true, element: <Start />, loader: startLoader },
+      // No loader: Start reads through `useStart` and owns its own loading and
+      // error branches, so the route only says which component renders.
+      { index: true, element: <Start /> },
       { path: 'history', element: <History /> },
       { path: 'templates', element: <Templates /> },
       { path: 'exercises', element: <Exercises /> },
