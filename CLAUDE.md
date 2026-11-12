@@ -129,6 +129,16 @@ Product v1:
 - **TanStack Query replaces route loaders** (decided, migration still to do). The route *tree* is unaffected — the pathless layout and `session/:id` as a sibling stand; only `loader` / `useLoaderData` go. Why: three mutation-heavy screens are still unwritten, and `setSession(await call())` only works on Session because every session mutation returns the whole session. Exercises and Templates have list ↔ detail ↔ archive views that must agree after a write, and hand-rolling that three times is worse code than `invalidateQueries`
   - `src/lib/queryClient.ts` holds the client so a test can build a provider around the same config the app runs with; `QueryClientProvider` sits outside `RouterProvider` in `main.tsx` so the cache outlives navigation
   - its defaults differ from the desktop-dashboard ones they came from on purpose: retries and refetch-on-reconnect stay **on** (a dropped request on gym wifi is the common case), focus refetching is **off** (every glance at a phone is a focus event), `staleTime` 30s (single-user app — nobody else is writing)
+- **Start migrated off its route loader onto React Query** (I wrote it, Claude guided). `pages/Start/index.tsx` + `pages/Start/hooks/useStart.ts` — the first feature folder, and the pattern the remaining screens copy:
+  - three queries, keyed `['templates']`, `['sessions','active']`, `['sessions','history']`. Hierarchical on purpose: `invalidateQueries({ queryKey: ['sessions'] })` catches both session queries and leaves templates alone
+  - "last trained" is `select`ed off the history query rather than given a key of its own — one request feeds both it and the raw list History will want. `select` is passed by reference (`select: lastTrainedByTemplate`), not wrapped in an arrow, or it re-runs every render
+  - `mutate`, not `mutateAsync`: nothing awaits the result, and `mutateAsync` rejects, so an un-caught call would log an unhandled rejection on every failure
+  - **invalidate before navigating *toward* the affected data, after navigating away from it.** `useStart` navigates away from Start, so it invalidates second; `Session.finish`/`discard` navigate back toward it, so they invalidate first
+  - the page branches on the **data**, not on `isLoading` — a boolean does not narrow `Template[] | undefined`, and `active === undefined` (not loaded) has to stay distinct from `active === null` (no workout)
+  - query errors and mutation errors stay separate: a failed load replaces the page, a failed tap shows a strip above a page that still works
+  - with no loader, `errorElement` no longer catches a dead API — a failed query is a value, not a throw. Each page owns its error branch now
+- `Session.tsx` got a `useQueryClient` **bridge** — `finish` and `discard` invalidate `['sessions']`. Without it, deleting a session left it on Start's banner inside the 30s `staleTime` and tapping it 404'd. Temporary until Session migrates properly
+- `npm run typecheck` in `apps/web`; `.vscode/settings.json` points the editor at the repo's TypeScript 6 (its own bundled copy does not read `paths` declared without `baseUrl`) and makes auto-import write `@/...`
 - `strict` turned on in `tsconfig.app.json` and `tsconfig.node.json`; `react-refresh/only-export-components` now allows a `loader` export beside the page component
 - **Deviations from the mockups, deliberate:** the "last time 77.5kg × 8" hint is missing (no endpoint exposes it — the prefilled numbers *are* last time's, but the API never says so); +/− are Lucide icons rather than the `−`/`+` glyphs in the source HTML, for consistency with the rest of the app; error strips use red, which the design does not define
 
@@ -141,10 +151,9 @@ a placeholder stops reading the React and starts thinking "unfinished side
 project", so that gap outranks everything else below.
 
 ### P0 — not sendable without these
-0. **Move the two loaders onto Query hooks** (me), split either side of Exercises:
-   - **`Start.tsx` first** — one loader, three independent reads, and one hand-rolled `busy`/`error` mutation. The smallest file that exercises `useQuery` *and* `useMutation`, and the first thing that proves the provider is wired
-   - **`Session.tsx` after Exercises** — 585 lines, every mutation returning the whole session, and the derived current-exercise logic sitting on top. Don't learn `useMutation` on the most delicate screen in the repo; learn it on a greenfield one, then come back
-   - the interim state (Session on a loader, everything else on Query) is tracked and temporary. It must not survive past Exercises — two data patterns in a five-screen app is the single most askable flaw in the repo
+**Deadline: sending this with applications on Sunday 2026-11-15.** Order below is the three days, and anything not on it waits.
+
+0. ~~`Start.tsx` onto Query hooks~~ — **done**. `Session.tsx` still runs on its loader with the invalidation bridge, and **that is deliberate until after Sunday**: it works, the visible bug is fixed, and "mid-migration, Start is done, Session is next" is a question I can answer out loud. A stub History page is not
 1. **History page** (me) — the easiest real screen. `GET /sessions` already returns `setCount` and `volume`, newest first; `docs/design/screens/screens-pc.png` is the split-view spec
 2. **Templates editor** (me, **solo**) — the showpiece: nested form state, add/remove/reorder rows, a `PUT` that replaces the whole template. Real form complexity is most of a React job, and this is the page a reviewer should be pointed at. `docs/design/screens/screens-1.png`
 3. **Exercises library** (me) — smallest CRUD, plus the archive/restore the API already has
