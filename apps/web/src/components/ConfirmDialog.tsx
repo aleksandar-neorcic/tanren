@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useScrollLock } from '../lib/useScrollLock.ts'
+import { useScrollLock } from '@/lib/useScrollLock.ts'
 
 interface Props {
   title: string

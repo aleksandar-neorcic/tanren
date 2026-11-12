@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { errorMessage } from '../api/client.ts'
-import { exercisesApi } from '../api/endpoints.ts'
-import type { Exercise } from '../api/types.ts'
-import { useScrollLock } from '../lib/useScrollLock.ts'
+import { errorMessage } from '@/api/client.ts'
+import { exercisesApi } from '@/api/endpoints.ts'
+import type { Exercise } from '@/api/types.ts'
+import { useScrollLock } from '@/lib/useScrollLock.ts'
 import { CloseIcon } from './icons.tsx'
 
 interface Props {

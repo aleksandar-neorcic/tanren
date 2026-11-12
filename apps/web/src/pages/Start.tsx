@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link, useLoaderData, useNavigate } from 'react-router'
-import { ApiError, errorMessage } from '../api/client.ts'
-import { sessionsApi, templatesApi } from '../api/endpoints.ts'
-import type { Session, SessionSummary, Template } from '../api/types.ts'
-import { ChevronRightIcon, PlusIcon } from '../components/icons.tsx'
-import { formatElapsed, formatShortDate } from '../lib/format.ts'
-import { useNow } from '../lib/useNow.ts'
+import { ApiError, errorMessage } from '@/api/client.ts'
+import { sessionsApi, templatesApi } from '@/api/endpoints.ts'
+import type { Session, SessionSummary, Template } from '@/api/types.ts'
+import { ChevronRightIcon, PlusIcon } from '@/components/icons.tsx'
+import { formatElapsed, formatShortDate } from '@/lib/format.ts'
+import { useNow } from '@/lib/useNow.ts'
 
 interface StartData {
   templates: Template[]

@@ -1,5 +1,5 @@
 import { Link, useRouteError } from 'react-router'
-import { ApiError } from '../api/client.ts'
+import { ApiError } from '@/api/client.ts'
 
 /**
  * What a route shows when its loader throws, or when a component below it

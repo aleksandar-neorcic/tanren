@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router'
-import { ClockIcon, DumbbellIcon, GridIcon, PlayIcon } from '../components/icons.tsx'
+import { ClockIcon, DumbbellIcon, GridIcon, PlayIcon } from '@/components/icons.tsx'
 
 // One source for both navs. `onPhone` is false for Exercises because the phone
 // pill bar has three tabs (docs/design/screens/screens-1.png) — the PC sidebar

@@ -8,6 +8,14 @@
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
 
+    /* Paths: "@/x" means "src/x", so a file can move folders without its
+       imports changing, and nothing reads as "../../.."
+       No "baseUrl": it is deprecated in TS 6, and "paths" has resolved
+       relative to this file since TS 4.4 without it. */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,

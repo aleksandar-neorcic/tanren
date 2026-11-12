@@ -1,13 +1,13 @@
 import { useCallback, useState } from 'react'
 import { Link, useLoaderData, useNavigate, type LoaderFunctionArgs } from 'react-router'
-import { errorMessage } from '../api/client.ts'
-import { sessionExercisesApi, sessionsApi, setsApi } from '../api/endpoints.ts'
-import type { Session as WorkoutSession, SessionExercise, SetLog } from '../api/types.ts'
-import AddExerciseSheet from '../components/AddExerciseSheet.tsx'
-import ConfirmDialog from '../components/ConfirmDialog.tsx'
-import { CheckIcon, ChevronLeftIcon, MinusIcon, PlusIcon, TrashIcon } from '../components/icons.tsx'
-import { formatElapsed, round1 } from '../lib/format.ts'
-import { useNow } from '../lib/useNow.ts'
+import { errorMessage } from '@/api/client.ts'
+import { sessionExercisesApi, sessionsApi, setsApi } from '@/api/endpoints.ts'
+import type { Session as WorkoutSession, SessionExercise, SetLog } from '@/api/types.ts'
+import AddExerciseSheet from '@/components/AddExerciseSheet.tsx'
+import ConfirmDialog from '@/components/ConfirmDialog.tsx'
+import { CheckIcon, ChevronLeftIcon, MinusIcon, PlusIcon, TrashIcon } from '@/components/icons.tsx'
+import { formatElapsed, round1 } from '@/lib/format.ts'
+import { useNow } from '@/lib/useNow.ts'
 
 export async function loader({ params }: LoaderFunctionArgs): Promise<WorkoutSession> {
   // The route only matches with an `:id` present, but the type cannot say that,
