@@ -35,7 +35,10 @@ Product v1:
 6. **Update README** and this `CLAUDE.md` (Done / Next) as you go.
 7. **Commit and push** in small clear commits. Never commit `.env` or `*.db`.
 
-## Design reference (IMPORTANT for any UI work)
+## Code + design reference (IMPORTANT before writing anything in `apps/web`)
+- `docs/conventions.md` is the code spec: folder layout, hooks, forms, imports, and what was rejected. Follow it; if something in it is wrong, change the doc rather than quietly deviating.
+
+### Design
 - `docs/design/` is the visual spec. Read `docs/design/README.md` and look at the PNGs in `docs/design/screens/` before suggesting, reviewing, or writing any UI.
 - Match its style: black/zinc dark theme with a single lime accent, Session v1 "one exercise at a time" logging, a floating pill tab bar on phone and a left sidebar on PC.
 - Logo and favicon assets are in `docs/design/brand/`. When something in the code disagrees with the mockups, point it out instead of silently picking one.
@@ -117,6 +120,15 @@ Product v1:
   - progression is derived from how many times ago a lift was trained, with no `Math.random()`: a seed that differs per run makes a screenshot unreproducible. Weights move in per-exercise increments (`[kg, stepKg]`) so every number is one real plates can make
   - it also gives the logging screen's prefill something to work with — `lastLoggedSets` had nothing to read from on a fresh database
 
+- **`docs/conventions.md` — the web app's house style, and the spec for every screen from here on.** Folder layout, naming, barrels, imports, the `use<Entity>()` hook shape, forms, the page shape, and a table of patterns rejected on purpose. It was lifted from another project of mine and written out in full so nothing depends on that repo being on disk. Highlights:
+  - **taken**: feature folders (`pages/<Feature>/index.tsx` + `components/` + `hooks/` + `types.ts` + `schemas.ts`) with a barrel `index.ts` per `components/`; a `use<Entity>()` hook per feature owning its queries and mutations; react-hook-form + `zodResolver` with the schema in `schemas.ts`; the loading → error → data `renderContent()` page shape; `@/` for cross-concern imports and `./` within a folder
+  - **taken with a change**: request/update types come from `z.infer` instead of being hand-written beside the schema, because a hand-written `types.ts` duplicates the `schemas.ts` that defines it and drifts from it. Only the server *response* type is written by hand
+  - **left**: a full `shadcn` init. It would lay slate tokens over the black/lime spec in `docs/design/`, and a reviewer opening a folder of 25 generated components learns nothing about me. Radix primitives go under the overlays instead, keeping the hand-written styling
+  - **left**: per-entity optimistic-update boilerplate (~200 near-identical lines repeated for every entity in the source project). Write the first hook longhand, then extract one `useCrudResource`
+  - **left**: `baseUrl` beside `paths` (deprecated in TS 6; `paths` has resolved relative to the tsconfig since 4.4), `clsx([...])` where `cn()` exists, a hardcoded `text-red-500` next to a theme token, a media-query hook doing a Tailwind breakpoint's job, and one `XWithSuspense` wrapper per route — the full list with reasons is §10 of `docs/conventions.md`
+- **TanStack Query replaces route loaders** (decided, migration still to do). The route *tree* is unaffected — the pathless layout and `session/:id` as a sibling stand; only `loader` / `useLoaderData` go. Why: three mutation-heavy screens are still unwritten, and `setSession(await call())` only works on Session because every session mutation returns the whole session. Exercises and Templates have list ↔ detail ↔ archive views that must agree after a write, and hand-rolling that three times is worse code than `invalidateQueries`
+  - `src/lib/queryClient.ts` holds the client so a test can build a provider around the same config the app runs with; `QueryClientProvider` sits outside `RouterProvider` in `main.tsx` so the cache outlives navigation
+  - its defaults differ from the desktop-dashboard ones they came from on purpose: retries and refetch-on-reconnect stay **on** (a dropped request on gym wifi is the common case), focus refetching is **off** (every glance at a phone is a focus event), `staleTime` 30s (single-user app — nobody else is writing)
 - `strict` turned on in `tsconfig.app.json` and `tsconfig.node.json`; `react-refresh/only-export-components` now allows a `loader` export beside the page component
 - **Deviations from the mockups, deliberate:** the "last time 77.5kg × 8" hint is missing (no endpoint exposes it — the prefilled numbers *are* last time's, but the API never says so); +/− are Lucide icons rather than the `−`/`+` glyphs in the source HTML, for consistency with the rest of the app; error strips use red, which the design does not define
 
@@ -129,6 +141,7 @@ a placeholder stops reading the React and starts thinking "unfinished side
 project", so that gap outranks everything else below.
 
 ### P0 — not sendable without these
+0. **Move the two loaders (`Start.tsx`, `Session.tsx`) onto Query hooks** (me) — do this *before* the new screens, not after. It is two files today; after three more screens are built on loaders it is six, and two data patterns in a five-screen app is the single most askable flaw in the repo
 1. **History page** (me) — the easiest real screen. `GET /sessions` already returns `setCount` and `volume`, newest first; `docs/design/screens/screens-pc.png` is the split-view spec
 2. **Templates editor** (me, **solo**) — the showpiece: nested form state, add/remove/reorder rows, a `PUT` that replaces the whole template. Real form complexity is most of a React job, and this is the page a reviewer should be pointed at. `docs/design/screens/screens-1.png`
 3. **Exercises library** (me) — smallest CRUD, plus the archive/restore the API already has
