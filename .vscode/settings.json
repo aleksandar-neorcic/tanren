@@ -1,0 +1,21 @@
+{
+  // Use the repo's own TypeScript (6.0) rather than the one bundled with the
+  // editor. A 5.x server will not understand `paths` without `baseUrl`, and
+  // will report errors the project does not have.
+  "typescript.tsdk": "apps/web/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  // Auto-import writes "@/api/endpoints.ts", not "../../api/endpoints.ts" —
+  // the rule in docs/conventions.md §4, enforced by the editor instead of by
+  // review.
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+
+  // Moving a file rewrites the imports that pointed at it.
+  "typescript.updateImportsOnFileMove.enabled": "always",
+
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true
+  }
+}
