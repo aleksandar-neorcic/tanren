@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useState } from 'react'
 import { Link, useLoaderData, useNavigate, type LoaderFunctionArgs } from 'react-router'
 import { errorMessage } from '@/api/client.ts'
@@ -26,6 +27,11 @@ export default function Session() {
 
 function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
   const navigate = useNavigate()
+  // A bridge until this screen moves off its loader and onto Query hooks like
+  // Start has. Finishing or discarding changes what `['sessions', *]` holds, and
+  // this page is the only thing on the API that knows it — nothing else would
+  // tell the cache, so Start would keep showing a workout that is over or gone.
+  const queryClient = useQueryClient()
 
   // Every mutation on the API answers with the whole session, so the entire
   // client-side state story is "keep the newest answer". Nothing to merge,
@@ -137,6 +143,11 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
     setError(null)
     try {
       await sessionsApi.finish(session.id)
+      // Before navigating, not after: we are moving *toward* the screens that
+      // read this data, so it has to be stale by the time they mount. (In
+      // useStart the order is reversed, because starting a session navigates
+      // away from Start rather than back to it.)
+      queryClient.invalidateQueries({ queryKey: ['sessions'] })
       navigate('/history')
     } catch (e) {
       setError(errorMessage(e))
@@ -151,6 +162,7 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
     setError(null)
     try {
       await sessionsApi.remove(session.id)
+      queryClient.invalidateQueries({ queryKey: ['sessions'] })
       // `replace`, not a push: the session is gone, so leaving /session/:id in
       // the back stack only means a 404 the next time you swipe back.
       navigate('/', { replace: true })
