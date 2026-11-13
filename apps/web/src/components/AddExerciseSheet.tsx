@@ -72,7 +72,12 @@ export default function AddExerciseSheet({ busy, onPick, onClose }: Props) {
         <div className="shrink-0 p-4 pb-3">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-black uppercase tracking-tight">Add exercise</h2>
-            <button type="button" onClick={onClose} aria-label="Close" className="p-2 text-zinc-500">
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="p-2 text-zinc-500"
+            >
               <CloseIcon size={20} />
             </button>
           </div>

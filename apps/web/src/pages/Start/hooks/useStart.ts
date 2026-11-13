@@ -10,21 +10,25 @@ export default function useStart() {
 
   const templatesQuery = useQuery({
     queryKey: ['templates'],
-    queryFn: () => templatesApi.list()
+    queryFn: () => templatesApi.list(),
   })
 
   const historyQuery = useQuery({
     queryKey: ['sessions', 'history'],
     queryFn: () => sessionsApi.history(),
-    select: lastTrainedByTemplate
+    select: lastTrainedByTemplate,
   })
 
   const activeQuery = useQuery({
     queryKey: ['sessions', 'active'],
-    queryFn: () => sessionsApi.active()
+    queryFn: () => sessionsApi.active(),
   })
 
-  const { mutate: startSession, isPending: isStarting, error: startError } = useMutation({
+  const {
+    mutate: startSession,
+    isPending: isStarting,
+    error: startError,
+  } = useMutation({
     mutationFn: (body: { templateId?: string }) => sessionsApi.start(body),
     onSuccess: (session) => {
       navigate(`/session/${session.id}`)
@@ -38,7 +42,7 @@ export default function useStart() {
         navigate(`/session/${e.activeSessionId}`)
         return
       }
-    }
+    },
   })
 
   const isLoading = templatesQuery.isPending || historyQuery.isPending || activeQuery.isPending
@@ -52,7 +56,7 @@ export default function useStart() {
     error,
     startSession,
     isStarting,
-    startError
+    startError,
   }
 }
 

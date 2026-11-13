@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* The app is dark-only (docs/design/README.md), so the page itself is dark
    too: without this the browser paints white around and behind the app

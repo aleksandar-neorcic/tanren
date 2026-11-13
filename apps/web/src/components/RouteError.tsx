@@ -12,8 +12,7 @@ import { ApiError } from '@/api/client.ts'
 export default function RouteError() {
   const error = useRouteError()
 
-  const title =
-    error instanceof ApiError && error.offline ? 'API unreachable' : 'Something broke'
+  const title = error instanceof ApiError && error.offline ? 'API unreachable' : 'Something broke'
   const detail =
     error instanceof Error ? error.message : 'An unexpected error stopped this page loading.'
 

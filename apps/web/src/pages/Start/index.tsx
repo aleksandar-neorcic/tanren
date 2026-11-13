@@ -28,7 +28,9 @@ export default function Start() {
       <h1 className="mb-5 hidden text-3xl font-black uppercase tracking-tight md:block">Start</h1>
 
       {startError && (
-        <p className="mb-4 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">{errorMessage(startError)}</p>
+        <p className="mb-4 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          {errorMessage(startError)}
+        </p>
       )}
 
       {active && (
@@ -39,7 +41,8 @@ export default function Start() {
           <div className="text-xs uppercase tracking-widest opacity-80">Active session</div>
           <div className="flex items-end justify-between">
             <div className="text-xl font-bold">
-              {active.name} · <span className="tabular-nums">{formatElapsed(active.startedAt, now)}</span>
+              {active.name} ·{' '}
+              <span className="tabular-nums">{formatElapsed(active.startedAt, now)}</span>
             </div>
             <div className="font-bold">Resume ›</div>
           </div>

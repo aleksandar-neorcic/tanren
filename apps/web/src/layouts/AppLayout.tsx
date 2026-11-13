@@ -9,8 +9,22 @@ const navItems = [
   { to: '/history', label: 'History', Icon: ClockIcon, filled: false, onPhone: true, owns: [] },
   // Exercises has no phone tab of its own, so Templates stays lit while you're
   // in the library — that is what the mockup shows.
-  { to: '/templates', label: 'Templates', Icon: GridIcon, filled: false, onPhone: true, owns: ['/exercises'] },
-  { to: '/exercises', label: 'Exercises', Icon: DumbbellIcon, filled: false, onPhone: false, owns: [] },
+  {
+    to: '/templates',
+    label: 'Templates',
+    Icon: GridIcon,
+    filled: false,
+    onPhone: true,
+    owns: ['/exercises'],
+  },
+  {
+    to: '/exercises',
+    label: 'Exercises',
+    Icon: DumbbellIcon,
+    filled: false,
+    onPhone: false,
+    owns: [],
+  },
 ]
 
 type NavItem = (typeof navItems)[number]

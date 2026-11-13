@@ -323,9 +323,7 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
 
             <div className="mt-4 flex items-center justify-between px-1 text-sm">
               <span className="text-zinc-500">Next</span>
-              <span className="font-semibold">
-                {next ? `${next.exercise.name} ›` : 'Finish ›'}
-              </span>
+              <span className="font-semibold">{next ? `${next.exercise.name} ›` : 'Finish ›'}</span>
             </div>
           </>
         )}
@@ -546,14 +544,7 @@ function SetEntry({
         disabled={busy}
         onChange={setWeight}
       />
-      <NumberField
-        label="reps"
-        value={reps}
-        step={1}
-        integer
-        disabled={busy}
-        onChange={setReps}
-      />
+      <NumberField label="reps" value={reps} step={1} integer disabled={busy} onChange={setReps} />
       <button
         type="button"
         disabled={busy}
@@ -572,7 +563,9 @@ function FinishedLog({ exercises }: { exercises: SessionExercise[] }) {
     <div className="mt-4">
       {exercises.map((exercise) => (
         <div key={exercise.id} className="mb-3 rounded-2xl bg-zinc-900 p-4">
-          <div className="text-lg font-black uppercase tracking-tight">{exercise.exercise.name}</div>
+          <div className="text-lg font-black uppercase tracking-tight">
+            {exercise.exercise.name}
+          </div>
           <div className="mt-1 flex flex-wrap gap-2">
             {exercise.sets.map((s) => (
               <span
