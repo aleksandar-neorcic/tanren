@@ -7,7 +7,8 @@ import History from './pages/History/index.tsx'
 import NotFound from './pages/NotFound.tsx'
 import Session, { loader as sessionLoader } from './pages/Session.tsx'
 import Start from './pages/Start/index.tsx'
-import Templates from './pages/Templates.tsx'
+import Templates from './pages/Templates/index.tsx'
+import TemplateEditor from './pages/Templates/pages/TemplateEditor/index.tsx'
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +29,8 @@ export const router = createBrowserRouter([
       { index: true, element: <Start /> },
       { path: 'history', element: <History /> },
       { path: 'templates', element: <Templates /> },
+      { path: 'templates/new', element: <TemplateEditor /> },
+      { path: 'templates/:id', element: <TemplateEditor /> },
       { path: 'exercises', element: <Exercises /> },
       { path: '*', element: <NotFound /> },
     ],

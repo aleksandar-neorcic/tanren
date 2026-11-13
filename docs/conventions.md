@@ -80,6 +80,13 @@ how many it pulls. Barrels are for `components/` folders only — not for `api/`
 - Never `../`. If you are reaching upward, use the alias.
 - Keep the file extension (`.ts` / `.tsx`); the tsconfig runs with
   `allowImportingTsExtensions`.
+- **Order: external packages, then `@/...`, then `./...`**, with no blank lines
+  between the groups. Nothing enforces it — Prettier does not sort imports and
+  no lint rule is installed — so it is a reading convention, not a guarantee.
+  Files written before this was written down do not follow it; fix them when you
+  touch them rather than in a sweep. Sorting on save (`import/order`, or a
+  Prettier sort-imports plugin) is a dependency plus a reformat of every file,
+  and was not worth it before the deadline.
 
 The alias is declared twice on purpose: `paths` in `tsconfig.app.json` type-checks
 it, `resolve.alias` in `vite.config.ts` resolves it at build time. Change one and

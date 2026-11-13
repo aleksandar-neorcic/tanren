@@ -1,5 +1,5 @@
 import { api } from './client.ts'
-import type { Exercise, Session, SessionSummary, Template } from './types.ts'
+import type { Exercise, Session, SessionSummary, Template, TemplateInput } from './types.ts'
 
 /**
  * One function per row of the README's API table.
@@ -16,6 +16,16 @@ export const exercisesApi = {
 
 export const templatesApi = {
   list: () => api.get<Template[]>('/templates'),
+  get: (id: string) => api.get<Template>(`/templates/${id}`),
+  create: (body: TemplateInput) => api.post<Template>('/templates', body),
+  /**
+   * `PUT`, not `PATCH`: the server replaces the whole template in one nested
+   * write, so an omitted field means "clear it" rather than "leave it". The
+   * editor always sends the complete template it is holding.
+   */
+  update: (id: string, body: TemplateInput) => api.put<Template>(`/templates/${id}`, body),
+  /** Hard delete. Sessions keep their history — the FK is `onDelete: SetNull`. */
+  remove: (id: string) => api.delete<void>(`/templates/${id}`),
 }
 
 export const sessionsApi = {

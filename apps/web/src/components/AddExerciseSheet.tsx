@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { errorMessage } from '@/api/client.ts'
 import { exercisesApi } from '@/api/endpoints.ts'
-import type { Exercise } from '@/api/types.ts'
 import { useScrollLock } from '@/lib/useScrollLock.ts'
 import { CloseIcon } from './icons.tsx'
 
@@ -15,35 +15,20 @@ interface Props {
  * The bottom sheet for adding an exercise the template did not plan for
  * (docs/design/screens/screens-1.png).
  *
- * This one fetches in an effect rather than in a route loader, because it is not
- * a route: it opens on top of the session, and the library is only worth loading
- * if you actually open it.
+ * Keyed ['exercises'], the same key the editor and the Exercises screen use: a
+ * sheet opened from a page that already holds the library renders from cache
+ * with no request at all. It used to fetch in an effect with a cancel flag —
+ * React Query owns that race now.
  */
 export default function AddExerciseSheet({ busy, onPick, onClose }: Props) {
-  const [exercises, setExercises] = useState<Exercise[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
 
-  useScrollLock()
+  const { data: exercises, error } = useQuery({
+    queryKey: ['exercises'],
+    queryFn: () => exercisesApi.list(),
+  })
 
-  useEffect(() => {
-    // StrictMode runs effects twice in development to surface exactly this bug:
-    // without the flag, a slow first response could land after the second one
-    // and overwrite it. The flag makes the stale run's result a no-op.
-    let cancelled = false
-    exercisesApi.list().then(
-      (list) => {
-        if (!cancelled) setExercises(list)
-      },
-      (e: unknown) => {
-        if (!cancelled) setError(errorMessage(e))
-      },
-    )
-    return () => {
-      cancelled = true
-    }
-    // No dependencies: fetch once, when the sheet opens.
-  }, [])
+  useScrollLock()
 
   const needle = query.trim().toLowerCase()
   const shown = (exercises ?? []).filter(
@@ -101,11 +86,11 @@ export default function AddExerciseSheet({ busy, onPick, onClose }: Props) {
             end of this list hands the remaining scroll to the page behind, so
             one flick past the last exercise drags the background along. */}
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
-          {error && <p className="px-1 py-3 text-sm text-red-400">{error}</p>}
-          {!error && exercises === null && (
+          {error && <p className="px-1 py-3 text-sm text-red-400">{errorMessage(error)}</p>}
+          {!error && exercises === undefined && (
             <p className="px-1 py-3 text-sm text-zinc-500">Loading…</p>
           )}
-          {!error && exercises !== null && shown.length === 0 && (
+          {!error && exercises !== undefined && shown.length === 0 && (
             <p className="px-1 py-3 text-sm text-zinc-500">Nothing matches “{query}”.</p>
           )}
 

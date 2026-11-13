@@ -23,6 +23,17 @@ export interface Template {
   exercises: TemplateExercise[]
 }
 
+/**
+ * The body `POST /templates` and `PUT /templates/:id` both take. `exercises`
+ * is an ordered array and the server derives each row's `order` from its
+ * index, so the two can never disagree.
+ */
+export interface TemplateInput {
+  name: string
+  notes: string | null
+  exercises: TemplateExerciseInput[]
+}
+
 export interface TemplateExerciseInput {
   exerciseId: string
   targetSets: number
