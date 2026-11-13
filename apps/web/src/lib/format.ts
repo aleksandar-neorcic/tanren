@@ -26,6 +26,29 @@ export function formatShortDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
+/**
+ * "Wed" — the weekday line the history rows stack above the date.
+ *
+ * Separate from `formatShortDate` rather than an option on it: the two are
+ * rendered as two lines in two different sizes, so a caller always wants one
+ * or the other, never a single string holding both.
+ */
+export function formatWeekday(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { weekday: 'short' })
+}
+
+/**
+ * "7,840" — a kg volume with thousands separators and no decimals.
+ *
+ * Volume is a sum of `weight x reps`, so 2.5kg plates leave float noise behind
+ * (see `round1`). Nobody lifts a tenth of a kilo, so the fraction is dropped
+ * here rather than rounded upstream — the number stays exact in the API and
+ * only the display is tidy.
+ */
+export function formatVolume(kg: number): string {
+  return kg.toLocaleString(undefined, { maximumFractionDigits: 0 })
+}
+
 /** Trim float noise: 2.5kg steps add up to 77.50000000000001 otherwise. */
 export function round1(value: number): number {
   return Math.round(value * 10) / 10

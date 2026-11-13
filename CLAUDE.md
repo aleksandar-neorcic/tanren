@@ -113,6 +113,15 @@ Product v1:
   - overlays (`ConfirmDialog`, `AddExerciseSheet`) share `useScrollLock`: an overlay is `fixed`, so without it the page keeps scrolling behind a sheet you cannot scroll. The hook also replaces the scrollbar's width with padding, or hiding the overflow widens the viewport and shifts the page sideways on PC. The sheet's list adds `overscroll-contain`, or a flick past the last exercise hands the leftover scroll to the page behind
   - finishing with exercises still open asks first: finishing is one-way (no endpoint reopens a session, and `finish` is idempotent so a retry will not undo it). `ConfirmDialog` takes a `tone`, defaulting to `danger` so a forgotten prop makes an action look more alarming than it is, never less
   - "Delete this session" for a workout started by accident: `DELETE /sessions/:id` behind a two-tap confirm that names how many sets go with it, then `navigate('/', { replace: true })` so the dead route is not left in the back stack. Only offered while the session is live — deleting from history belongs with the History page
+- React History page (`/history`) — the session list. Claude wrote most of the markup at my request; the hook and the branches are mine. What it settles:
+  - it reuses Start's query key (`['sessions', 'history']`) rather than taking one of its own, so Start → History is a cache hit and one request feeds both. `select` is per **observer**, not per cache entry: Start maps the same data through `lastTrainedByTemplate` and History reads it raw, from one fetch
+  - invalidation was already free — `Session.tsx`'s bridge invalidates the `['sessions']` prefix, which covers this key
+  - hooks above the guards, derived values below them: `useNow(false)` has to run on every render, while `weekAgo` / `thisWeek` / `weekVolume` only type-check after `sessions` has narrowed. Same file, opposite placement rules, and the difference is only whether the line calls a hook
+  - **`Date.now()` in a component body is a lint error** — `react-hooks/purity` in eslint-plugin-react-hooks v7. `useNow(false)` is the sanctioned form: one `Date.now()` in a lazy `useState` initialiser, no interval, nothing to tick for a 7-day window
+  - "this week" is a rolling 7 days, not a calendar week — no week-start to pick and no locale to get wrong
+  - an unfinished session **stays in the list**, with a lime ring and "In progress" where the set count goes, instead of being filtered out: a workout that disappears while you are doing it reads as a bug. It does mean a live row shows `0 kg`, because `setCount` and `volume` count done sets only
+  - `formatWeekday` and `formatVolume` joined `lib/format.ts`. Volume drops the fraction at the display edge rather than rounding upstream — the API keeps the exact sum
+  - the phone tab bar is `fixed`, so rows scrolled out from under it half-visible. `AppLayout` gained a `pointer-events-none` scrim that fades the page to black under the bar, and `pb-32` to match its height
 - Seed data for the demo (`apps/api/prisma/seed.ts`) — twelve finished sessions behind the exercises and templates, so a fresh install opens on a History page with something on it:
   - `WorkoutSession` has no natural unique key to upsert on, so the session block is skipped whenever `count() > 0` rather than inventing a key the app never reads. Re-running the seed after a real workout must not bury it
   - every session is finished and every set is `done`: `SessionsService.create` 409s while a session is open, so an unfinished seed row would break "Start" on first tap, and `toSessionSummary` counts only done sets, so undone ones seed rows reading `0 sets · 0 kg`
@@ -154,7 +163,7 @@ project", so that gap outranks everything else below.
 **Deadline: sending this with applications on Sunday 2026-11-15.** Order below is the three days, and anything not on it waits.
 
 0. ~~`Start.tsx` onto Query hooks~~ — **done**. `Session.tsx` still runs on its loader with the invalidation bridge, and **that is deliberate until after Sunday**: it works, the visible bug is fixed, and "mid-migration, Start is done, Session is next" is a question I can answer out loud. A stub History page is not
-1. **History page** (me) — the easiest real screen. `GET /sessions` already returns `setCount` and `volume`, newest first; `docs/design/screens/screens-pc.png` is the split-view spec
+1. ~~**History page**~~ — **the list is done** (see Done). What is left of `screens-pc.png` is the split-view detail pane, the search box and row selection, i.e. the PC half of the screen. Parked behind 2 and 3: a working list is not a stub, a stub Templates page is
 2. **Templates editor** (me, **solo**) — the showpiece: nested form state, add/remove/reorder rows, a `PUT` that replaces the whole template. Real form complexity is most of a React job, and this is the page a reviewer should be pointed at. `docs/design/screens/screens-1.png`
 3. **Exercises library** (me) — smallest CRUD, plus the archive/restore the API already has
 4. **Deploy somewhere clickable** — a repo link alone loses most reviewers. "Anyone can edit the demo data" is normal for a demo; do not let the auth question block this
@@ -168,6 +177,18 @@ project", so that gap outranks everything else below.
 Auth, charts, PRs, Docker, i18n, and the `screens-2.png` extras (rest timer,
 workout-finished summary, session detail). None of them change a hiring
 decision, and each one delays P0.
+
+**Parked, wanted later: group the History list by week.** A flat list of dates
+makes you count sessions by eye; a training log is read as "how many this
+week". One grouping pass over the already-newest-first array, keyed by that
+week's Monday (`(getDay() + 6) % 7` days back — Monday for a training week, not
+locale-dependent), rendering a heading per group with that week's session count
+and volume. The standalone "This week ..." summary line comes out when it
+lands, because each group header carries the same numbers. It is a deviation
+from `screens-pc.png`, which shows a flat list, so it needs a line in Done
+explaining why — the way the sidebar-icons deviation is recorded. Polish on a
+screen that already works, so it waits behind the Templates editor, Exercises
+and the deploy.
 
 ### Risks to manage — not code
 - **Claude wrote most of `apps/web`** (data layer, both screens, dialogs, the fixes). Interviewers will point at `settleExercise`, the `key`-based state reset, or loaders-vs-actions and ask *why this way*. The fix is writing the Templates editor unaided and being able to defend `Session.tsx` cold — those answers land well, they just have to be mine

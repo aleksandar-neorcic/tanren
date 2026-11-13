@@ -77,13 +77,19 @@ export default function AppLayout() {
 
       {/* The matched child route renders here. The bottom padding clears the
           floating phone bar; on PC there is nothing to clear. */}
-      <main className="w-full flex-1 px-4 pt-4 pb-28 md:px-8 md:py-6 md:pb-6">
+      <main className="w-full flex-1 px-4 pt-4 pb-32 md:px-8 md:py-6 md:pb-6">
         {/* On phones there is no sidebar to carry the wordmark, so the page
             header does. The History mockup drops it; that is a per-page call
             once the real screens exist. */}
         <img src="/wordmark.svg" alt="Tanren" className="mb-4 h-9 md:hidden" />
         <Outlet />
       </main>
+
+      {/* The bar floats over the page, so a long list would scroll out from
+          under it half-visible. This fades the last stretch of the page to
+          black instead. `pointer-events-none` keeps taps going through to the
+          rows underneath. */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 h-32 bg-linear-to-t from-black via-black/90 to-transparent md:hidden" />
 
       {/* Phone chrome: a floating pill bar. Hidden from md up. Inactive tabs
           are icon-only; the active one grows a lime pill with its label. */}
