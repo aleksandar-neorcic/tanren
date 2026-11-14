@@ -139,6 +139,49 @@ Product v1:
   - progression is derived from how many times ago a lift was trained, with no `Math.random()`: a seed that differs per run makes a screenshot unreproducible. Weights move in per-exercise increments (`[kg, stepKg]`) so every number is one real plates can make
   - it also gives the logging screen's prefill something to work with — `lastLoggedSets` had nothing to read from on a fresh database
 
+- **Templates editor finished** — the picker, editable targets and validation. Claude wrote
+  most of this round to my questions; the decisions:
+  - the **`AddExerciseSheet` renders outside the `<form>`**, in a fragment beside it. The sheet is
+    `fixed`, so it floats above the page visually — but `position: fixed` removes an element from
+    the visual flow, not from the DOM tree. Nested in the form, its search box is a text input in a
+    form that has a submit button, so Enter implicitly submits: three letters, Enter out of habit,
+    and the template saves and navigates away mid-pick
+  - `onPick` **`append`s a plain object**, never `setValue` on the array path. `useFieldArray` keeps
+    its own row ids beside the values, and only its mutators (`append`/`remove`/`move`) update both;
+    `setValue` writes values alone, so React re-keys the rows and every input below the insertion
+    point remounts
+  - **`valueAsNumber` for `targetSets`, `setValueAs: toNumberOrNull` for reps and weight.** A DOM
+    input hands back a string and the schema wants a number, but RHF's converter turns `''` into
+    `NaN`, and `NaN` fails a `.nullable()` number — so a blank box, which legitimately means "not
+    planned", would show an error. Verified against the installed converter, not the docs:
+    `(e,{valueAsNumber:r,setValueAs:s})=>E(e)?e:r?''===e?NaN:e?+e:e:…`, where `E=e=>void 0===e`
+  - that same line is why **`toNumberOrNull` takes `unknown`, not `string`**: only `undefined`
+    bypasses the converter, so RHF also runs it over the `null` already sitting in form state and
+    `null.trim()` threw during the input's render. It now lives in `src/lib/numberField.ts` so any
+    future numeric form shares the rule
+  - **errors render per field, not per row.** One message under three side-by-side boxes cannot say
+    which box it means — fixing Sets to 1 just showed the next field's error and read as "I fixed it
+    and it still complains". Each `<label>` owns its message, and the invalid input gets a red
+    **ring** rather than a border: these inputs have no border, so adding one on error would grow the
+    box by 2px and shift the row
+  - `targetInputClass(hasError)` builds the class string, because React has no `[ngClass]` — a
+    conditional class means producing the final string yourself. Its real job is the 160-character
+    base string that was otherwise identical in three inputs. Safe without `tailwind-merge` only
+    because the ternary emits one of the two ring colours, never both
+  - **`name: z.string().trim().min(1)`** — `.trim()` *before* `.min(1)`, or a name of three spaces
+    has length 3 and passes. It is a transform, so the trimmed string is also what gets submitted:
+    `zodResolver` hands Zod's parsed output to `onSubmit`
+  - the same hole was open on the API, where `@IsNotEmpty()` only rejects `''`. `src/common/
+    trim.decorator.ts` adds `@Trim()` for required names and `@TrimToNull()` for nullable text —
+    blank and `null` would read the same to a human but are two values in the column. Applied to all
+    seven user-entered text fields. It works because the global pipe has `transform: true`, so
+    class-transformer builds the DTO (running `@Transform`) before class-validator sees it
+  - **rejected:** tidying `01` to `1` on blur. It was written, then removed — `Number('01')` is 1, so
+    the value was never wrong, only the box, and saving navigates away a second later. Logged in
+    conventions §10 territory: cosmetic normalisation on a field whose value is already correct
+  - **`printWidth: 100` added to `apps/api/.prettierrc`**, which had none. The default 80 disagreed
+    with how the API was actually written, so any `npm run format` there rewrapped twelve untouched
+    files
 - **`docs/conventions.md` — the web app's house style, and the spec for every screen from here on.** Folder layout, naming, barrels, imports, the `use<Entity>()` hook shape, forms, the page shape, and a table of patterns rejected on purpose. It was lifted from another project of mine and written out in full so nothing depends on that repo being on disk. Highlights:
   - **taken**: feature folders (`pages/<Feature>/index.tsx` + `components/` + `hooks/` + `types.ts` + `schemas.ts`) with a barrel `index.ts` per `components/`; a `use<Entity>()` hook per feature owning its queries and mutations; react-hook-form + `zodResolver` with the schema in `schemas.ts`; the loading → error → data `renderContent()` page shape; `@/` for cross-concern imports and `./` within a folder
   - **taken with a change**: request/update types come from `z.infer` instead of being hand-written beside the schema, because a hand-written `types.ts` duplicates the `schemas.ts` that defines it and drifts from it. Only the server *response* type is written by hand
@@ -170,16 +213,18 @@ a placeholder stops reading the React and starts thinking "unfinished side
 project", so that gap outranks everything else below.
 
 ### P0 — not sendable without these
-**Deadline: sending this with applications on Sunday 2026-11-15.** Order below is the three days, and anything not on it waits.
+**Deadline: sending this with applications on Monday 2026-11-16; the work stops Sunday night.** (Was Sunday 2026-11-15 — moved a day on 2026-11-14, so Sunday is a full working day rather than a half one.) Order below is the order to do them in, and anything not on it waits.
 
-0. ~~`Start.tsx` onto Query hooks~~ — **done**. `Session.tsx` still runs on its loader with the invalidation bridge, and **that is deliberate until after Sunday**: it works, the visible bug is fixed, and "mid-migration, Start is done, Session is next" is a question I can answer out loud. A stub History page is not
+0. ~~`Start.tsx` onto Query hooks~~ — **done**. `Session.tsx` still runs on its loader with the invalidation bridge, and **that is deliberate until after the send**: it works, the visible bug is fixed, and "mid-migration, Start is done, Session is next" is a question I can answer out loud. A stub History page is not
 1. ~~**History page**~~ — **the list is done** (see Done). What is left of `screens-pc.png` is the split-view detail pane, the search box and row selection, i.e. the PC half of the screen. Parked behind 2 and 3: a working list is not a stub, a stub Templates page is
-2. **Templates editor** — **half done** (list, routes, schema, hook, name field, `useFieldArray` rows, delete-row, save). Stopped Saturday night. What is left, in the order to do it:
-   1. **Wire the picker** (~20 min) — `AddExerciseSheet` already takes `busy` / `onPick` / `onClose`; `onPick` appends `{ exerciseId, targetSets: 3, targetReps: null, targetWeight: null }`. Until this exists `/templates/new` cannot be saved at all, because the schema requires one exercise
-   2. **Editable targets per row** (~45 min) — rows render `3 × 8 @ 80 kg` read-only today. Register by path (`exercises.${index}.targetSets`, `{ valueAsNumber: true }`) — a DOM input hands back a string and the schema wants a number. **This is the part a reviewer pokes at; cut reorder before cutting this**
-   3. **Reorder** (~20 min) — up/down buttons calling `useFieldArray`'s `move()`. A deliberate deviation from `screens-1.png`, which says DRAG TO REORDER: touch drag needs dnd-kit plus sensors and keyboard support, which is hours, not minutes. Record the deviation in Done when it lands
-   4. **Delete template** (~15 min) — `templatesApi.remove` behind `ConfirmDialog`. First thing to cut
-   Also still missing on the list screen: the green play button that starts a session from a card, and the "last Oct 7" hint (needs the history query plus promoting `lastTrainedByTemplate` out of `useStart`)
+2. **Templates editor** — **done** (see Done). What is left is optional polish,
+   in the order to do it if there is time:
+   1. **Reorder** (~20 min) — up/down buttons calling `useFieldArray`'s `move()`. A
+      deliberate deviation from `screens-1.png`, which says DRAG TO REORDER: touch drag
+      needs dnd-kit plus sensors and keyboard support, which is hours, not minutes
+   2. **Delete template** (~15 min) — `templatesApi.remove` behind `ConfirmDialog`. First thing to cut
+   3. On the list screen: the green play button that starts a session from a card, and the
+      "last Oct 7" hint (needs the history query plus promoting `lastTrainedByTemplate` out of `useStart`)
 3. **Exercises library** (me) — smallest CRUD, plus the archive/restore the API already has
 4. **Deploy somewhere clickable — start this Saturday evening, not Sunday.** It is the only item on this list whose unknowns are not visible from here: a Node host for Nest, SQLite persistence across restarts, and the fact that `/api` only exists today because Vite's dev server proxies it. Everything else on this list can be estimated; this one can eat an evening. A repo link alone loses most reviewers. "Anyone can edit the demo data" is normal for a demo; do not let the auth question block this
 

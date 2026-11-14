@@ -197,6 +197,16 @@ The empty state is a real branch, not an accident of rendering a list of zero.
   swapping an icon or the library is a one-line change.
 - Colours come from the theme, never ad hoc. One hardcoded `text-red-500` sitting
   next to a token is how a palette rots.
+- **Never `px` for anything type-related — use `rem`, and prefer the token.**
+  Tailwind's own scale is already rem (`text-xs` is `0.75rem`), so `text-xs`
+  beats `text-[0.75rem]`, which beats `text-[12px]`. A `px` font size ignores
+  the reader's browser font-size setting; a `rem` one scales with it. If a size
+  genuinely is not on the scale, write it as an arbitrary **rem** value and say
+  in a comment which mockup it came from. The same goes for spacing and
+  rounding: reach for the scale (`gap-2`, `rounded-xl`) before an arbitrary
+  value. `px` stays acceptable only where a value is a real device dimension
+  and must not scale — hairline borders (`border`), and `1px`/`2px` ring and
+  outline widths.
 
 ## 10. Rejected on purpose
 
