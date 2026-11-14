@@ -93,6 +93,24 @@ The seed is worth running: it backfills five weeks of plausible history so the
 app opens on something to look at, with no `Math.random()` anywhere — the same
 command twice gives the same database.
 
+### Tests
+
+```bash
+cd apps/api
+npm run test:e2e
+```
+
+Eight end-to-end tests that drive the real HTTP API through supertest, covering
+the behaviour this README claims: the `409` carrying `activeSessionId`, `finish`
+being idempotent, prefill from the last finished session and its fallback to the
+template's targets, `setCount` and `volume` counting only sets marked `done`, and
+`DELETE /exercises/:id` archiving an exercise instead of taking its logged sets
+with it.
+
+They use their own SQLite file (`prisma/test.db`), created from the schema when
+the run starts, so development data is never touched — and each test empties the
+tables first, so the order they run in cannot change the result.
+
 ## Screens
 
 | Route | Chrome | What it does |
