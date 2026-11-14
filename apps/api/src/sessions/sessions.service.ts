@@ -12,13 +12,21 @@ import { UpdateSessionDto } from './dto/update-session.dto';
 import { FullSession, sessionInclude, toSessionSummary } from './session.include';
 
 /** What a set looks like before it has been logged: the numbers to aim for. */
-type PlannedSet = { setNumber: number; weight: number | null; reps: number | null };
+type PlannedSet = {
+  setNumber: number;
+  weight: number | null;
+  reps: number | null;
+};
 
 /** The bits of a previously logged set worth copying forward. */
 type PreviousSet = { weight: number | null; reps: number | null };
 
 /** The planned numbers on a template row, which is all the prefill needs from it. */
-type PlannedExercise = { targetSets: number; targetReps: number | null; targetWeight: number | null };
+type PlannedExercise = {
+  targetSets: number;
+  targetReps: number | null;
+  targetWeight: number | null;
+};
 
 @Injectable()
 export class SessionsService {
@@ -195,7 +203,11 @@ export class SessionsService {
           // time's sets or a single blank one to start typing into.
           sets: {
             create: previous?.length
-              ? previous.map((s, i) => ({ setNumber: i + 1, weight: s.weight, reps: s.reps }))
+              ? previous.map((s, i) => ({
+                  setNumber: i + 1,
+                  weight: s.weight,
+                  reps: s.reps,
+                }))
               : [{ setNumber: 1 }],
           },
         },
@@ -227,15 +239,16 @@ export class SessionsService {
           orderBy: { session: { startedAt: 'desc' } },
           select: {
             exerciseId: true,
-            sets: { orderBy: { setNumber: 'asc' }, select: { weight: true, reps: true } },
+            sets: {
+              orderBy: { setNumber: 'asc' },
+              select: { weight: true, reps: true },
+            },
           },
         }),
       ),
     );
 
-    return new Map(
-      rows.filter((row) => row !== null).map((row) => [row.exerciseId, row.sets]),
-    );
+    return new Map(rows.filter((row) => row !== null).map((row) => [row.exerciseId, row.sets]));
   }
 }
 
