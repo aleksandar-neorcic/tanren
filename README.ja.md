@@ -9,14 +9,16 @@ English version → [README.md](README.md)
 Tanren（鍛錬）は、反復によって鍛えることを意味します。
 
 <p align="center">
-  <img src="docs/screenshots/session.png" width="31%" alt="セットの記録画面。重量とレップ数の大きなステッパーに、前回の数値があらかじめ入っている">
-  <img src="docs/screenshots/start.png" width="31%" alt="スタート画面。テンプレートのカードと最終実施日が並ぶ">
-  <img src="docs/screenshots/exercises.png" width="31%" alt="種目ライブラリ。検索と部位フィルターつき">
+  <img src="docs/demo/session.gif" width="31%" alt="スマートフォンでのセット記録。重量とレップ数の大きなステッパーに、前回の数値があらかじめ入っている">
+  <img src="docs/demo/templates.gif" width="31%" alt="ワークアウトのテンプレート作成。項目ごとの目標値とバリデーション">
+  <img src="docs/demo/exercises.gif" width="31%" alt="種目ライブラリ。検索、部位フィルター、新規作成とアーカイブ">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/history-pc.png" width="92%" alt="PC 表示の履歴画面。サイドバーレイアウト">
+  <img src="docs/demo/desktop-tour.gif" width="92%" alt="同じアプリの PC 表示。サイドバーレイアウト">
 </p>
+
+<p align="center"><a href="docs/demo/tanren-full-tour.mp4">▶ 90 秒のフルツアー（MP4）</a></p>
 
 ## できること
 

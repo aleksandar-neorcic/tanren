@@ -9,14 +9,16 @@ PC. One responsive React app on a NestJS + Prisma API.
 Tanren means *forging* — training through repetition.
 
 <p align="center">
-  <img src="docs/screenshots/session.png" width="31%" alt="Logging a set: big weight and reps steppers, prefilled from last time">
-  <img src="docs/screenshots/start.png" width="31%" alt="Start screen with template cards and last-trained dates">
-  <img src="docs/screenshots/exercises.png" width="31%" alt="Exercise library with search and muscle-group filters">
+  <img src="docs/demo/session.gif" width="31%" alt="Logging sets on a phone: big weight and reps steppers, prefilled from last time">
+  <img src="docs/demo/templates.gif" width="31%" alt="Building a workout template, with per-field targets and validation">
+  <img src="docs/demo/exercises.gif" width="31%" alt="The exercise library: search, muscle-group filters, create and archive">
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/history-pc.png" width="92%" alt="History on a PC, with the sidebar layout">
+  <img src="docs/demo/desktop-tour.gif" width="92%" alt="The same app on a PC, with the sidebar layout">
 </p>
+
+<p align="center"><a href="docs/demo/tanren-full-tour.mp4">▶ the full 90-second tour (MP4)</a></p>
 
 ## What it does
 
