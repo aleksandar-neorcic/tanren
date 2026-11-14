@@ -128,9 +128,13 @@ tables first, so the order they run in cannot change the result.
   `invalidateQueries(['sessions'])` covers every session view.
 - `/session/:id` is a **sibling** of the layout route, not a child — the route tree
   says which pages have chrome, rather than a conditional inside the layout.
-- `Session.tsx` is still on its original React Router loader with an invalidation
-  bridge, mid-migration and deliberately so: it works, and the decision to finish the
-  migration after shipping is a decision, not an oversight.
+- Every screen is a feature folder (`pages/<Feature>/index.tsx` + `components/` +
+  `hooks/`), Session included — it was one 590-line file until its state moved into
+  `useSessionScreen` and its blocks became components.
+- Session still reads through its original React Router loader rather than a Query
+  hook, with a bridge that invalidates `['sessions']` when a workout is finished or
+  discarded. That one is deliberate: it works, and finishing the migration after
+  shipping is a decision rather than an oversight.
 
 ## API
 
