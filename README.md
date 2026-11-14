@@ -1,19 +1,63 @@
 # Tanren (鍛錬)
 
-Personal gym app: log workouts on your phone, review everything else on a PC.
+**A gym app built to be used in a gym.** Log a workout one exercise at a time on
+your phone between sets; review history, templates and your exercise library on a
+PC. One responsive React app on a NestJS + Prisma API.
 
-- Phone-first workout logging (big tap targets, fast set entry)
-- PC-friendly history, templates, and exercise editing
-- One responsive React web app + a small NestJS API on SQLite
+Tanren means *forging* — training through repetition.
+
+<p align="center">
+  <img src="docs/screenshots/session.png" width="31%" alt="Logging a set: big weight and reps steppers, prefilled from last time">
+  <img src="docs/screenshots/start.png" width="31%" alt="Start screen with template cards and last-trained dates">
+  <img src="docs/screenshots/exercises.png" width="31%" alt="Exercise library with search and muscle-group filters">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/history-pc.png" width="92%" alt="History on a PC, with the sidebar layout">
+</p>
+
+## What it does
+
+1. Build **exercises** and **workout templates**
+2. **Start a session** from a template — every set prefilled with what you lifted last time
+3. **Log sets** (weight × reps) one exercise at a time, with thumb-sized steppers
+4. **Review history**: sessions newest-first, with set counts and total volume
+
+## A few decisions worth looking at
+
+Each of these is a problem the obvious implementation gets wrong.
+
+- **The current exercise is derived, never stored.** `findIndex((e) => !e.done)`
+  over the server's own flags — a copy in `useState` is a second source of truth
+  that can disagree with the first. [`Session.tsx`](apps/web/src/pages/Session.tsx)
+- **`key` is how state resets.** `useState(initial)` reads its argument only on the
+  first render, so new props do not reset a stepper; a new `key` does. The screen is
+  keyed by session id, the stepper block by set id.
+- **Deleting a set is not finishing an exercise.** Tapping "Done set" means you are
+  finished; deleting the last unlogged set is housekeeping. Collapsing the two moved
+  you on from an exercise you never closed, with no way back from a mistap.
+- **The ± values stay local until you commit them.** Getting to 82.5 kg is three
+  taps, and three PATCHes for a number you have not committed to is three chances to
+  fail on gym wifi.
+- **Invalidate before navigating *toward* the affected data, after navigating away
+  from it** — and `exact: true` when deleting, because a prefix invalidation would
+  refetch the row the server just removed.
+- **Exercises archive; templates delete.** Both foreign keys onto `Exercise` cascade,
+  so deleting one would take its `SetLog`s — and your logged workouts — with it.
+  `WorkoutSession.template` is `onDelete: SetNull`, so a template can go while its
+  history stays. [`schema.prisma`](apps/api/prisma/schema.prisma)
+
+Longer form, including what was tried and rejected: [`CLAUDE.md`](CLAUDE.md) ·
+[`docs/conventions.md`](docs/conventions.md) · [`docs/decisions.md`](docs/decisions.md)
 
 ## Stack
 
-- `apps/web` — React + TypeScript + Vite + Tailwind
-- `apps/api` — NestJS + Prisma + SQLite
-- Node 22 (see `.nvmrc`)
-- npm
+- `apps/web` — React 19, TypeScript, Vite, Tailwind v4, TanStack Query,
+  react-hook-form + Zod, react-router
+- `apps/api` — NestJS 12, Prisma 6, SQLite, class-validator
+- Node 22 (see `.nvmrc`), npm, monorepo with no workspace tooling on purpose
 
-## Setup
+## Run it
 
 ```bash
 git clone git@github.com:aleksandar-neorcic/tanren.git
@@ -25,7 +69,7 @@ cd apps/api
 cp .env.example .env
 npm install --legacy-peer-deps
 npx prisma migrate dev
-npm run seed        # optional: starter exercises + Push/Pull/Legs templates
+npm run seed        # starter exercises, Push/Pull/Legs templates, 12 past sessions
 npm run start:dev
 
 # Web (other terminal)
@@ -34,8 +78,33 @@ npm install
 npm run dev
 ```
 
+- Web: http://localhost:5173 (also served on the LAN, so a phone can open it)
 - API: http://localhost:3000
-- Web: http://localhost:5173
+
+The seed is worth running: it backfills five weeks of plausible history so the
+app opens on something to look at, with no `Math.random()` anywhere — the same
+command twice gives the same database.
+
+## Screens
+
+| Route | Chrome | What it does |
+| --- | --- | --- |
+| `/` | tabs / sidebar | Start: active-session banner with a live timer, template cards, last trained |
+| `/session/:id` | **none** | Logging, one exercise at a time — no tab bar to mistap mid-workout |
+| `/history` | tabs / sidebar | Sessions newest-first, rolling 7-day summary, in-progress rows kept in place |
+| `/templates` `/templates/:id` | tabs / sidebar | Template list and editor (nested field array, per-field validation) |
+| `/exercises` | tabs / sidebar | Library with client-side search, muscle-group filters, archive and restore |
+
+- All network calls go through [`src/api/client.ts`](apps/web/src/api/client.ts);
+  [`src/api/endpoints.ts`](apps/web/src/api/endpoints.ts) has one function per row
+  of the API table below.
+- Reads are **TanStack Query** with hierarchical keys, so one
+  `invalidateQueries(['sessions'])` covers every session view.
+- `/session/:id` is a **sibling** of the layout route, not a child — the route tree
+  says which pages have chrome, rather than a conditional inside the layout.
+- `Session.tsx` is still on its original React Router loader with an invalidation
+  bridge, mid-migration and deliberately so: it works, and the decision to finish the
+  migration after shipping is a decision, not an oversight.
 
 ## API
 
@@ -48,7 +117,7 @@ npm run dev
 | GET/PUT/DELETE | `/templates/:id` | read / replace / delete |
 | GET | `/sessions?limit=50` | history, newest first, with set count + volume |
 | GET | `/sessions/active` | the unfinished session or `null` |
-| POST | `/sessions` | start `{ templateId? , name? }` — sets prefilled from last time |
+| POST | `/sessions` | start `{ templateId?, name? }` — sets prefilled from last time |
 | GET/PATCH/DELETE | `/sessions/:id` | read / rename+notes / delete |
 | POST | `/sessions/:id/finish` | mark finished |
 | POST | `/sessions/:id/exercises` | add `{ exerciseId }` mid-session |
@@ -63,7 +132,7 @@ merge a patch into local state.
   carrying `activeSessionId`, so the client can jump to the live session instead.
 - `POST /sessions/:id/finish` is idempotent: a retry over bad gym wifi returns the
   session unchanged rather than re-stamping `finishedAt`.
-- Prefill on start: how many sets comes from the template's `targetSets`, the weight
+- Prefill on start: how many sets comes from the template's `targetSets`; the weight
   and reps come from the last finished session for that exercise, falling back to the
   template's own targets when there is no history.
 - `setCount` and `volume` in the history list count only sets marked `done`.
@@ -73,31 +142,13 @@ curl -X POST localhost:3000/sessions -H "Content-Type: application/json" -d '{"t
 curl -X PATCH localhost:3000/sets/SET_ID -H "Content-Type: application/json" -d '{"weight":80,"reps":8,"done":true}'
 ```
 
-## Web app
+## Design
 
-`docs/design/` is the visual spec — match it before changing any screen.
-
-| Route | Chrome | What it does |
-| --- | --- | --- |
-| `/` | tabs / sidebar | Start: active-session banner, start empty, template cards |
-| `/session/:id` | none | Phone logging, one exercise at a time; discard a session started by accident |
-| `/history` `/templates` `/exercises` | tabs / sidebar | still stubs |
-
-- All network calls go through `src/api/client.ts`; `src/api/endpoints.ts` has one
-  function per row of the table above.
-- Reads happen in React Router **loaders**, exported next to the page they feed and
-  wired up in `src/routes.tsx` — the page never renders an empty version of itself.
-- Writes are plain calls. Every session mutation answers with the whole session, so
-  storing that answer *is* the state update; there is nothing to revalidate.
-- `/session/:id` sits outside the layout route, so the logging screen has no tab bar
-  to mistap mid-workout.
-
-## Docs for AI / contributors
-
-- `CLAUDE.md` — project brief, done / next
-- `docs/decisions.md` — why these stack choices
+[`docs/design/`](docs/design) is the visual spec — black and zinc with a single lime
+accent, Session v1 logging, a floating pill tab bar on phone and a sidebar on PC.
+Deviations from the mockups are deliberate and recorded in `CLAUDE.md` rather than
+silently chosen.
 
 ## Notes
 
 - Never commit `.env` or `*.db`
-- Private repo for now
