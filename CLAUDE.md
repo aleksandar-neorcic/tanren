@@ -261,6 +261,23 @@ Product v1:
   - search and the muscle-group chips are **client-side** (no search endpoint, 42 rows), and the
     chip list is derived from the data, so it can never list a group nothing uses
 
+- **Demo recordings instead of a deploy** — `docs/demo/` holds four GIFs (logging a session,
+  building a template, the exercise library, and the PC layout) plus a 90-second MP4 tour, and
+  both READMEs lead with them:
+  - **GIF for anything that has to play inline.** GitHub renders an `.mp4` referenced from a
+    repo path as a link, not a player; only video uploaded to its own CDN embeds. So the tour
+    is linked and the four clips are GIFs
+  - re-encoded from the source MP4s at 10fps / 260px (760px for the desktop tour): 2.1 MB for
+    the four, against 6.5 MB for the originals. Recompressing the existing GIFs would have
+    been worse than going back to the video
+  - the PC recording exists because the README claims "PC for everything else" and showed only
+    a phone. A claim with no evidence is the kind of thing a reviewer notices
+  - `docs/screenshots/` was removed once nothing referenced it
+  - **known gap the recordings exposed: Exercises cannot be reached on a phone.** `navItems`
+    has `onPhone: false` for it, the pill bar has three tabs, and nothing on the Templates
+    screen links to `/exercises`, so filming it needed a direct URL. The mockup has the same
+    hole, so it is a design gap rather than a deviation
+
 - **`docs/conventions.md` — the web app's house style, and the spec for every screen from here on.** Folder layout, naming, barrels, imports, the `use<Entity>()` hook shape, forms, the page shape, and a table of patterns rejected on purpose. It was lifted from another project of mine and written out in full so nothing depends on that repo being on disk. Highlights:
   - **taken**: feature folders (`pages/<Feature>/index.tsx` + `components/` + `hooks/` + `types.ts` + `schemas.ts`) with a barrel `index.ts` per `components/`; a `use<Entity>()` hook per feature owning its queries and mutations; react-hook-form + `zodResolver` with the schema in `schemas.ts`; the loading → error → data `renderContent()` page shape; `@/` for cross-concern imports and `./` within a folder
   - **taken with a change**: request/update types come from `z.infer` instead of being hand-written beside the schema, because a hand-written `types.ts` duplicates the `schemas.ts` that defines it and drifts from it. Only the server *response* type is written by hand
@@ -305,11 +322,22 @@ project", so that gap outranks everything else below.
    3. On the list screen: the green play button that starts a session from a card, and the
       "last Oct 7" hint (needs the history query plus promoting `lastTrainedByTemplate` out of `useStart`)
 3. ~~**Exercises library**~~ — **done** (see Done). No page in the app is a stub any more
-4. **Deploy somewhere clickable — start this Saturday evening, not Sunday.** It is the only item on this list whose unknowns are not visible from here: a Node host for Nest, SQLite persistence across restarts, and the fact that `/api` only exists today because Vite's dev server proxies it. Everything else on this list can be estimated; this one can eat an evening. A repo link alone loses most reviewers. "Anyone can edit the demo data" is normal for a demo; do not let the auth question block this
+4. ~~**Deploy somewhere clickable**~~ — **cut on 2026-11-14, deliberately.** Not because
+   there was no time to get *something* online, but because deploying is a thing I want to
+   learn properly and do myself rather than hand to Claude to make work by Monday. Doing it
+   that way this weekend would mean a live URL I could not explain, which is worth less in an
+   interview than not having one. It stays on the list for after the send, as my own piece of
+   work: a Node host for Nest, SQLite persistence across restarts, and the fact that `/api`
+   only exists today because Vite's dev server proxies it.
+   - what replaced it: **recordings of the app running** (see Done). A reviewer can watch the
+     whole thing work without a URL. "I cut the deploy to learn it properly, and recorded the
+     app instead" is an answer I can give out loud; "I ran out of time" is not
+   - the repo link is therefore the whole deliverable, so **the repo has to be public** and
+     the README has to carry the demo above the fold
 
 ### P1 — expected for a React role specifically
 5. **Tests** — `apps/web` has no test runner at all today. Claude sets up Vitest + Testing Library, I write them. Not coverage numbers; about six that mean something: the set-logging flow, the derived current-exercise logic (where the real bug lived), `ApiError` parsing a Nest validation body
-6. **README screenshot or GIF at the top** — reviewers spend about a minute. 103 lines of prose and no images is the wrong trade
+6. ~~**README screenshot or GIF at the top**~~ — **done**, and then some: four GIFs and a 90-second tour (see Done) — reviewers spend about a minute. 103 lines of prose and no images is the wrong trade
 7. **CI** (Claude) — no `.github/workflows` yet. Typecheck + lint + test is cheap and signals professionalism
 
 ### Deliberately not before sending
