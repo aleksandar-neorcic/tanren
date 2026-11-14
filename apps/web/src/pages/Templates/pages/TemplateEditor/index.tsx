@@ -1,10 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { Link, useParams } from 'react-router'
 import { errorMessage } from '@/api/client.ts'
 import type { Template } from '@/api/types.ts'
-import { TrashIcon } from '@/components/icons.tsx'
+import AddExerciseSheet from '@/components/AddExerciseSheet.tsx'
+import { PlusIcon, TrashIcon } from '@/components/icons.tsx'
 import Loading from '@/components/Loading.tsx'
+import { toNumberOrNull } from '@/lib/numberField.ts'
 import useTemplateEditor from './hooks/useTemplateEditor.ts'
 import { templateSchema, type TemplateForm } from './schemas.ts'
 
@@ -21,10 +24,12 @@ export default function TemplateEditor() {
   // The rows of the nested array. `fields` carries a generated `id` per row,
   // which is what keys them — stable across reorders, unlike the index, and
   // unique even if the same exercise is added twice.
-  const { fields, remove } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'exercises',
   })
+
+  const [picking, setPicking] = useState(false)
 
   if (error) {
     return (
@@ -36,71 +41,150 @@ export default function TemplateEditor() {
 
   if (isLoading) return <Loading />
 
+  const rowErrors = form.formState.errors.exercises
+
   return (
-    <form onSubmit={form.handleSubmit((values) => save(values))} className="max-w-xl md:max-w-3xl">
-      <div className="flex items-center justify-between">
-        <Link to="/templates" className="text-sm text-zinc-400">
-          ‹ Cancel
-        </Link>
-        <button
-          type="submit"
-          disabled={isSaving}
-          className="h-9 rounded-full bg-lime-400 px-5 text-sm font-bold text-black disabled:opacity-40"
-        >
-          {isSaving ? 'Saving…' : 'Save'}
-        </button>
-      </div>
+    <>
+      <form
+        onSubmit={form.handleSubmit((values) => save(values))}
+        className="max-w-xl md:max-w-3xl"
+      >
+        <div className="flex items-center justify-between">
+          <Link to="/templates" className="text-sm text-zinc-400">
+            ‹ Cancel
+          </Link>
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="h-9 rounded-full bg-lime-400 px-5 text-sm font-bold text-black disabled:opacity-40"
+          >
+            {isSaving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
 
-      {saveError && (
-        <p className="mt-4 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
-          {errorMessage(saveError)}
-        </p>
-      )}
+        {saveError && (
+          <p className="mt-4 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            {errorMessage(saveError)}
+          </p>
+        )}
 
-      <label className="mt-6 block text-xs tracking-widest text-zinc-500 uppercase">
-        Template name
-      </label>
-      <input
-        {...form.register('name')}
-        placeholder="PUSH"
-        className="mt-2 h-14 w-full rounded-2xl border-2 border-zinc-800 bg-zinc-950 px-4 text-xl font-black tracking-tight text-white uppercase focus:border-lime-400 focus:outline-none"
-      />
-      {form.formState.errors.name && (
-        <p className="mt-2 text-sm text-red-400">{form.formState.errors.name.message}</p>
-      )}
+        <label className="mt-6 block text-xs tracking-widest text-zinc-500 uppercase">
+          Template name
+        </label>
+        <input
+          {...form.register('name')}
+          placeholder="PUSH"
+          className="mt-2 h-14 w-full rounded-2xl border-2 border-zinc-800 bg-zinc-950 px-4 text-xl font-black tracking-tight text-white uppercase focus:border-lime-400 focus:outline-none"
+        />
+        {form.formState.errors.name && (
+          <p className="mt-2 text-sm text-red-400">{form.formState.errors.name.message}</p>
+        )}
 
-      <div className="mt-6 text-xs tracking-widest text-zinc-500 uppercase">
-        Exercises · {fields.length}
-      </div>
+        <div className="mt-6 text-xs tracking-widest text-zinc-500 uppercase">
+          Exercises · {fields.length}
+        </div>
 
-      {form.formState.errors.exercises?.message && (
-        <p className="mt-2 text-sm text-red-400">{form.formState.errors.exercises.message}</p>
-      )}
+        {form.formState.errors.exercises?.message && (
+          <p className="mt-2 text-sm text-red-400">{form.formState.errors.exercises.message}</p>
+        )}
 
-      <div className="mt-2 space-y-2">
-        {fields.map((field, index) => (
-          <div key={field.id} className="flex items-center gap-3 rounded-2xl bg-zinc-900 p-4">
-            <div className="min-w-0 flex-1">
-              <div className="truncate font-bold">
-                {exercises?.find((e) => e.id === field.exerciseId)?.name ?? 'Unknown exercise'}
+        <div className="mt-2 space-y-2">
+          {fields.map((field, index) => (
+            <div key={field.id} className="flex items-center gap-3 rounded-2xl bg-zinc-900 p-4">
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-bold">
+                  {exercises?.find((e) => e.id === field.exerciseId)?.name ?? 'Unknown exercise'}
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <label className="min-w-0 flex-1">
+                    <span className="block text-xs tracking-widest text-zinc-600 uppercase">
+                      Sets
+                    </span>
+                    <input
+                      {...form.register(`exercises.${index}.targetSets`, { valueAsNumber: true })}
+                      inputMode="numeric"
+                      aria-invalid={!!rowErrors?.[index]?.targetSets}
+                      className={targetInputClass(!!rowErrors?.[index]?.targetSets)}
+                    />
+                    {rowErrors?.[index]?.targetSets && (
+                      <p className="mt-1 text-center text-xs text-red-400">
+                        {rowErrors[index]?.targetSets?.message}
+                      </p>
+                    )}
+                  </label>
+                  <label className="min-w-0 flex-1">
+                    <span className="block text-xs tracking-widest text-zinc-600 uppercase">
+                      Reps
+                    </span>
+                    <input
+                      {...form.register(`exercises.${index}.targetReps`, {
+                        setValueAs: toNumberOrNull,
+                      })}
+                      inputMode="numeric"
+                      placeholder="—"
+                      aria-invalid={!!rowErrors?.[index]?.targetReps}
+                      className={targetInputClass(!!rowErrors?.[index]?.targetReps)}
+                    />
+                    {rowErrors?.[index]?.targetReps && (
+                      <p className="mt-1 text-center text-xs text-red-400">
+                        {rowErrors[index]?.targetReps?.message}
+                      </p>
+                    )}
+                  </label>
+                  <label className="min-w-0 flex-1">
+                    <span className="block text-xs tracking-widest text-zinc-600 uppercase">
+                      kg
+                    </span>
+                    <input
+                      {...form.register(`exercises.${index}.targetWeight`, {
+                        setValueAs: toNumberOrNull,
+                      })}
+                      inputMode="decimal"
+                      placeholder="—"
+                      aria-invalid={!!rowErrors?.[index]?.targetWeight}
+                      className={targetInputClass(!!rowErrors?.[index]?.targetWeight)}
+                    />
+                    {rowErrors?.[index]?.targetWeight && (
+                      <p className="mt-1 text-center text-xs text-red-400">
+                        {rowErrors[index]?.targetWeight?.message}
+                      </p>
+                    )}
+                  </label>
+                </div>
               </div>
-              <div className="text-sm text-zinc-500">
-                {field.targetSets} × {field.targetReps ?? '—'}
-                {field.targetWeight !== null ? ` @ ${field.targetWeight} kg` : ''}
-              </div>
+              <button
+                type="button"
+                onClick={() => remove(index)}
+                className="shrink-0 text-zinc-500"
+                aria-label="Remove"
+              >
+                <TrashIcon size={18} />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => remove(index)}
-              className="shrink-0 text-zinc-500"
-              aria-label="Remove"
-            >
-              <TrashIcon size={18} />
-            </button>
-          </div>
-        ))}
-      </div>
-    </form>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setPicking(true)}
+          className="mt-3 flex items-center gap-1 text-sm text-zinc-400"
+        >
+          <PlusIcon size={16} />
+          Add exercise
+        </button>
+      </form>
+
+      {picking && (
+        <AddExerciseSheet
+          busy={false}
+          onClose={() => setPicking(false)}
+          onPick={(exerciseId) => {
+            append({ exerciseId, targetSets: 3, targetReps: null, targetWeight: null })
+            setPicking(false)
+          }}
+        />
+      )}
+    </>
   )
 }
 
@@ -116,4 +200,12 @@ function toForm(template: Template): TemplateForm {
       targetWeight: row.targetWeight,
     })),
   }
+}
+
+function targetInputClass(hasError: boolean): string {
+  return [
+    'mt-1 h-10 w-full rounded-xl bg-zinc-950 px-3 text-center text-sm font-bold text-white',
+    'placeholder:text-zinc-700 focus:outline-none focus:ring-2',
+    hasError ? 'ring-2 ring-red-500 focus:ring-red-500' : 'focus:ring-lime-400',
+  ].join(' ')
 }
