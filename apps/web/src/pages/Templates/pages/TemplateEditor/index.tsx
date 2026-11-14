@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { Link, useParams } from 'react-router'
 import { errorMessage } from '@/api/client.ts'
 import type { Template } from '@/api/types.ts'
 import AddExerciseSheet from '@/components/AddExerciseSheet.tsx'
+import ConfirmDialog from '@/components/ConfirmDialog.tsx'
 import { PlusIcon, TrashIcon } from '@/components/icons.tsx'
 import Loading from '@/components/Loading.tsx'
 import { toNumberOrNull } from '@/lib/numberField.ts'
@@ -13,7 +14,18 @@ import { templateSchema, type TemplateForm } from './schemas.ts'
 
 export default function TemplateEditor() {
   const { id } = useParams()
-  const { template, exercises, error, isLoading, save, isSaving, saveError } = useTemplateEditor(id)
+  const {
+    template,
+    exercises,
+    error,
+    isLoading,
+    save,
+    isSaving,
+    saveError,
+    removeTemplate,
+    isRemoving,
+    removeError,
+  } = useTemplateEditor(id)
 
   const form = useForm<TemplateForm>({
     resolver: zodResolver(templateSchema),
@@ -30,6 +42,9 @@ export default function TemplateEditor() {
   })
 
   const [picking, setPicking] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+
+  const cancelDelete = useCallback(() => setConfirmingDelete(false), [])
 
   if (error) {
     return (
@@ -62,9 +77,9 @@ export default function TemplateEditor() {
           </button>
         </div>
 
-        {saveError && (
+        {(saveError ?? removeError) && (
           <p className="mt-4 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            {errorMessage(saveError)}
+            {errorMessage(saveError ?? removeError)}
           </p>
         )}
 
@@ -172,7 +187,36 @@ export default function TemplateEditor() {
           <PlusIcon size={16} />
           Add exercise
         </button>
+
+        {/* Only when editing: there is nothing to delete on /templates/new. */}
+        {id !== undefined && (
+          <button
+            type="button"
+            disabled={isRemoving}
+            onClick={() => setConfirmingDelete(true)}
+            className="mt-8 flex w-full items-center justify-center gap-1.5 py-2 text-sm text-zinc-600 disabled:opacity-40"
+          >
+            <TrashIcon size={14} />
+            Delete this template
+          </button>
+        )}
       </form>
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title="Delete this template?"
+          body={
+            fields.length === 1
+              ? 'Its one exercise goes with it. Past workouts that used it are kept.'
+              : `Its ${fields.length} exercises go with it. Past workouts that used it are kept.`
+          }
+          confirmLabel="Delete"
+          cancelLabel="Keep it"
+          busy={isRemoving}
+          onConfirm={() => removeTemplate()}
+          onCancel={cancelDelete}
+        />
+      )}
 
       {picking && (
         <AddExerciseSheet

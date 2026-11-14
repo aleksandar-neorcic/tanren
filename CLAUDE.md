@@ -182,6 +182,37 @@ Product v1:
   - **`printWidth: 100` added to `apps/api/.prettierrc`**, which had none. The default 80 disagreed
     with how the API was actually written, so any `npm run format` there rewrapped twelve untouched
     files
+- **Delete a template** — from the editor and from each row of the list, both behind `ConfirmDialog`:
+  - **a prefix invalidation is a bet that every key under it is still fetchable, and delete loses
+    that bet.** `invalidateQueries({ queryKey: ['templates'] })` also matches the editor's own
+    `['templates', id]`, which is still a mounted observer at that moment, so it refetched the
+    template the server had just deleted — a 404 in the console on every successful delete.
+    `exact: true` is the fix; create and update keep the broad call, because they leave every key
+    under the prefix valid
+  - **`removeQueries` on a mounted query is worse, not better.** It was tried first and caused the
+    same 404 by a different route: dropping the entry leaves the observer with no data, so the next
+    render re-creates the query and fetches. Measured against the installed `query-core` — the
+    detail entry is left to `gcTime` instead, which collects it five minutes after the editor
+    unmounts
+  - on the list the trash button is a **sibling** of the card's `<Link>` inside a `relative`
+    wrapper, not a child of it. A `<button>` inside an `<a>` is invalid HTML, and the click would
+    bubble into a navigation; the usual `preventDefault` + `stopPropagation` patch works by
+    claiming the click was a navigation being cancelled, when it never was one. Siblings say what
+    is true: two targets that overlap visually. `pr-14` on the link keeps the exercise list clear
+    of the icon
+  - the id is a mutation **variable** (`mutationFn: (id: string) => …`), so one mutation serves
+    every row, and the dialog is closed from the call site's own `onSuccess` option rather than the
+    hook's — the hook owns what is true for every caller, the call site owns its own state
+  - **rejected: an `id` prop on `ConfirmDialog`.** Its only possible use is being handed back
+    through `onConfirm`, and the handler is written inside the scope that already has the id. That
+    round trip is what `BsModalService.show(C, { initialState })` forces on you in Angular, where
+    the modal is built outside your component; a dialog rendered by your own JSX has no such
+    boundary. Also rejected for now: extracting the `useState` + `useCallback` pair behind a
+    `useConfirm()` hook — four call sites, two of which are booleans that would fit it badly
+  - **known gap, deliberately left:** `ConfirmDialog`'s `busy` disables both buttons but not the
+    backdrop or the Escape key, so the dialog can be dismissed mid-request. The mutation finishes
+    and navigates either way
+
 - **`docs/conventions.md` — the web app's house style, and the spec for every screen from here on.** Folder layout, naming, barrels, imports, the `use<Entity>()` hook shape, forms, the page shape, and a table of patterns rejected on purpose. It was lifted from another project of mine and written out in full so nothing depends on that repo being on disk. Highlights:
   - **taken**: feature folders (`pages/<Feature>/index.tsx` + `components/` + `hooks/` + `types.ts` + `schemas.ts`) with a barrel `index.ts` per `components/`; a `use<Entity>()` hook per feature owning its queries and mutations; react-hook-form + `zodResolver` with the schema in `schemas.ts`; the loading → error → data `renderContent()` page shape; `@/` for cross-concern imports and `./` within a folder
   - **taken with a change**: request/update types come from `z.infer` instead of being hand-written beside the schema, because a hand-written `types.ts` duplicates the `schemas.ts` that defines it and drifts from it. Only the server *response* type is written by hand
@@ -222,7 +253,7 @@ project", so that gap outranks everything else below.
    1. **Reorder** (~20 min) — up/down buttons calling `useFieldArray`'s `move()`. A
       deliberate deviation from `screens-1.png`, which says DRAG TO REORDER: touch drag
       needs dnd-kit plus sensors and keyboard support, which is hours, not minutes
-   2. **Delete template** (~15 min) — `templatesApi.remove` behind `ConfirmDialog`. First thing to cut
+   2. ~~**Delete template**~~ — **done** (see Done), from both the editor and the list
    3. On the list screen: the green play button that starts a session from a card, and the
       "last Oct 7" hint (needs the history query plus promoting `lastTrainedByTemplate` out of `useStart`)
 3. **Exercises library** (me) — smallest CRUD, plus the archive/restore the API already has

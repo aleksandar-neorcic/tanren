@@ -31,6 +31,18 @@ export default function useTemplateEditor(id?: string) {
     },
   })
 
+  const {
+    mutate: removeTemplate,
+    isPending: isRemoving,
+    error: removeError,
+  } = useMutation({
+    mutationFn: () => templatesApi.remove(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['templates'], exact: true })
+      navigate('/templates', { replace: true })
+    },
+  })
+
   return {
     template: templateQuery.data,
     exercises: exercisesQuery.data,
@@ -42,5 +54,8 @@ export default function useTemplateEditor(id?: string) {
     save,
     isSaving,
     saveError,
+    removeTemplate,
+    isRemoving,
+    removeError,
   }
 }
