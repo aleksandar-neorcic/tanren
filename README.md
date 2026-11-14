@@ -60,8 +60,8 @@ Longer form, including what was tried and rejected: [`CLAUDE.md`](CLAUDE.md) ·
 
 ## Stack
 
-- `apps/web` — React 19, TypeScript, Vite, Tailwind v4, TanStack Query,
-  react-hook-form + Zod, react-router
+- `apps/web` — React 19, TypeScript 6, Vite 8, Tailwind v4, TanStack Query 5,
+  react-hook-form 7 + Zod 4, react-router 8
 - `apps/api` — NestJS 12, Prisma 6, SQLite, class-validator
 - Node 22 (see `.nvmrc`), npm, monorepo with no workspace tooling on purpose
 
