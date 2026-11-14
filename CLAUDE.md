@@ -308,6 +308,31 @@ Templates and Exercises are still stubs. A reviewer who clicks History and sees
 a placeholder stops reading the React and starts thinking "unfinished side
 project", so that gap outranks everything else below.
 
+### Sunday 2026-11-15 — everything left, in order
+
+Saturday ended here: P0 is built (all five screens real), the deploy is cut on purpose,
+the API has 8 e2e tests, both READMEs lead with the demo recordings, and everything is
+committed and pushed. Sending on **Monday 2026-11-16, 12:00 JST**.
+
+1. **Make the repo public** — `gh repo edit --visibility public`. The hard blocker: until
+   then every link, GIF and file in the README 404s for whoever gets the link. Mine to do,
+   nobody else's
+2. **Exercises is unreachable on a phone** — the only functional hole left. `navItems` has
+   `onPhone: false` for it, the pill bar holds three tabs, and nothing on the Templates
+   screen links to `/exercises`. One `<Link>` on the Templates screen closes it
+3. **CI** (Claude) — `.github/workflows`: typecheck + lint + `npm run test:e2e` on push.
+   Cheap now that the tests exist, and a green check on the repo front page is what reads
+   "professional" with no deploy behind it
+4. **Decide the `Co-Authored-By: Claude` trailer** — still on most commits, and the new ones
+   deliberately have none. Keep it or strip it, but decide rather than discover it mid-interview.
+   The README's "How I built this" already says how the project was built, so keeping it is
+   consistent
+5. Optional, only if the morning leaves room: reorder rows in the template editor
+   (`useFieldArray`'s `move()`), and the green play button on the Templates list cards
+
+Not doing: the deploy (see 4 below), auth, charts, PRs, Docker, i18n beyond the Japanese
+README.
+
 ### P0 — not sendable without these
 **Deadline: sending this with applications on Monday 2026-11-16; the work stops Sunday night.** (Was Sunday 2026-11-15 — moved a day on 2026-11-14, so Sunday is a full working day rather than a half one.) Order below is the order to do them in, and anything not on it waits.
 
