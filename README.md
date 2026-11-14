@@ -37,7 +37,7 @@ Each of these is a problem the obvious implementation gets wrong.
 
 - **The current exercise is derived, never stored.** `findIndex((e) => !e.done)`
   over the server's own flags — a copy in `useState` is a second source of truth
-  that can disagree with the first. [`Session.tsx`](apps/web/src/pages/Session.tsx)
+  that can disagree with the first. [`useSessionScreen.ts`](apps/web/src/pages/Session/hooks/useSessionScreen.ts)
 - **`key` is how state resets.** `useState(initial)` reads its argument only on the
   first render, so new props do not reset a stepper; a new `key` does. The screen is
   keyed by session id, the stepper block by set id.
