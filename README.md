@@ -23,6 +23,14 @@ Tanren means *forging* — training through repetition.
 3. **Log sets** (weight × reps) one exercise at a time, with thumb-sized steppers
 4. **Review history**: sessions newest-first, with set counts and total volume
 
+## How I built this
+
+I'm building Tanren to learn React and NestJS. I wanted to make something I'd actually use rather than a random demo project, so I picked a gym app I plan to use myself, and I'll keep building it.
+
+I come from Angular, so this is my first project with both. I had Claude Code generate the initial baseline to speed up learning, so I'd have a working example of how things are usually done in React and Nest instead of starting from the documentation alone. It's the same way I learned Angular years ago: I was working on the backend of a project, and when the frontend developer left, I learned Angular from that project's existing frontend code.
+
+After that, I approached it the way I would at work. I either wrote features myself and had Claude review them, or pair-programmed with Claude, checking its code and asking about anything I didn't understand until I did. My focus was on getting the hang of React and Nest, so I let Claude handle the commit messages and help with this README.
+
 ## A few decisions worth looking at
 
 Each of these is a problem the obvious implementation gets wrong.
