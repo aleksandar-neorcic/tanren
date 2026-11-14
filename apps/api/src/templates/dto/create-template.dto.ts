@@ -1,13 +1,16 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { TemplateExerciseInputDto } from './template-exercise-input.dto';
+import { Trim, TrimToNull } from '../../common/trim.decorator';
 
 export class CreateTemplateDto {
+  @Trim()
   @IsString()
   @IsNotEmpty()
   name: string;
 
   // Nullable in the schema: `null` clears the column, so it is allowed through.
+  @TrimToNull()
   @IsOptional()
   @IsString()
   notes?: string | null;
