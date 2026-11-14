@@ -213,6 +213,54 @@ Product v1:
     backdrop or the Escape key, so the dialog can be dismissed mid-request. The mutation finishes
     and navigates either way
 
+- **Exercises library** (`/exercises`) — the last stub, now the full CRUD plus archive/restore,
+  against `docs/design/screens/screens-1.png` panel 3:
+  - **two deviations from that mockup, both recorded rather than faked.** The rows show no
+    equipment ("Chest · Barbell"), because `Exercise` has no such column and adding one buys a
+    subtitle on one screen; and no `120 × 5 best`, because that is a PR — deliberately out of
+    scope, and no endpoint carries it (`GET /sessions` returns summaries, not sets, so it would
+    mean fetching every session to compute one number)
+  - `exercisesApi` had only `list()`. It gained `create`, `update`, `archive` and an
+    `includeArchived` flag that **defaults to false**, so `AddExerciseSheet` and the template
+    editor kept compiling untouched. No `get(id)`: nothing deep-links one exercise, and an unused
+    endpoint function is a line to defend for nothing
+  - **two request types, where templates needed one.** `PUT` replaces, so an omitted field means
+    "clear it"; `PATCH` merges, so it means "leave it alone". Hence `ExerciseInput` for create and
+    `ExerciseUpdate = Partial<ExerciseInput> & { archived?: boolean }` for the patch — which also
+    makes restore `update(id, { archived: false })` rather than a third endpoint
+  - **the form holds strings; `null` exists only at the API boundary.** An `<input>` cannot hold
+    `null` — React flips it to uncontrolled and warns — so `schemas.ts` types the optional text as
+    `z.string().trim()` and the page converts `'' || null` on the way out. `.trim()` is a
+    transform, so its output is what reaches `onSubmit`: the whitespace-name hole is closed before
+    it opens, on the client as well as in `@TrimToNull()`
+  - `defaultValues`, not `values`, in `ExerciseSheet` — the exercise comes from the list already on
+    screen, so it is in hand at mount. The rule is not "create vs edit", it is **is the data there
+    when the form mounts**. The sheet is keyed `sheet.exercise?.id ?? 'new'` so editing a second
+    row remounts it rather than showing the first row's defaults
+  - sheet state is `null | { exercise?: Exercise }`: closed, creating, editing — one value, so
+    "open" and "which row" cannot disagree the way `isOpen` + `editing` can
+  - **archive is in the sheet, restore is on the row.** Deliberately asymmetric: archiving ends a
+    decision made while looking at the exercise; restoring is a one-tap undo of something already
+    visible in a filtered list
+  - **no hard delete, and the schema is why.** Both FKs onto `Exercise` are `onDelete: Cascade`, so
+    deleting one would erase every `SessionExercise` and its `SetLog`s — logged workouts gone from
+    History. Templates can be hard-deleted because `WorkoutSession.template` is `SetNull`; the two
+    entities got different rules on purpose. If true deletion is ever wanted, the honest form is
+    "delete only when nothing references it, else 409", which is a migration and a route, not a
+    button
+  - **muscle group stays free text.** The seed already holds nine granular values (Quads,
+    Rear delts, Calves) — a taxonomy that belongs to the user, not the schema, and an enum would
+    make every new group a migration. A native `<datalist>` was tried first and replaced: it is
+    drawn by the OS, so it cannot be sized to the input or forced above it. The dropdown is now a
+    real `<ul>`, `absolute bottom-full w-full`, with `onMouseDown` + `preventDefault` so the press
+    does not blur the input out from under its own click
+  - the input's `onBlur` is **composed**, not replaced: `{...register()}` carries RHF's own
+    handler, and a later prop of the same name would overwrite it
+  - `useWatch({ control, name })`, not `form.watch(...)` — the latter trips React Compiler ("returns
+    functions which cannot be memoized"), which then skips optimising the whole component
+  - search and the muscle-group chips are **client-side** (no search endpoint, 42 rows), and the
+    chip list is derived from the data, so it can never list a group nothing uses
+
 - **`docs/conventions.md` — the web app's house style, and the spec for every screen from here on.** Folder layout, naming, barrels, imports, the `use<Entity>()` hook shape, forms, the page shape, and a table of patterns rejected on purpose. It was lifted from another project of mine and written out in full so nothing depends on that repo being on disk. Highlights:
   - **taken**: feature folders (`pages/<Feature>/index.tsx` + `components/` + `hooks/` + `types.ts` + `schemas.ts`) with a barrel `index.ts` per `components/`; a `use<Entity>()` hook per feature owning its queries and mutations; react-hook-form + `zodResolver` with the schema in `schemas.ts`; the loading → error → data `renderContent()` page shape; `@/` for cross-concern imports and `./` within a folder
   - **taken with a change**: request/update types come from `z.infer` instead of being hand-written beside the schema, because a hand-written `types.ts` duplicates the `schemas.ts` that defines it and drifts from it. Only the server *response* type is written by hand
@@ -233,7 +281,7 @@ Product v1:
 - `Session.tsx` got a `useQueryClient` **bridge** — `finish` and `discard` invalidate `['sessions']`. Without it, deleting a session left it on Start's banner inside the 30s `staleTime` and tapping it 404'd. Temporary until Session migrates properly
 - `npm run typecheck` in `apps/web`; `.vscode/settings.json` points the editor at the repo's TypeScript 6 (its own bundled copy does not read `paths` declared without `baseUrl`) and makes auto-import write `@/...`
 - `strict` turned on in `tsconfig.app.json` and `tsconfig.node.json`; `react-refresh/only-export-components` now allows a `loader` export beside the page component
-- **Deviations from the mockups, deliberate:** the "last time 77.5kg × 8" hint is missing (no endpoint exposes it — the prefilled numbers *are* last time's, but the API never says so); +/− are Lucide icons rather than the `−`/`+` glyphs in the source HTML, for consistency with the rest of the app; error strips use red, which the design does not define
+- **Deviations from the mockups, deliberate:** the "last time 77.5kg × 8" hint is missing (no endpoint exposes it — the prefilled numbers *are* last time's, but the API never says so); +/− are Lucide icons rather than the `−`/`+` glyphs in the source HTML, for consistency with the rest of the app; error strips use red, which the design does not define — and that red now also marks the two irreversible actions ("Delete this session", "Delete this template"), matching the confirm button they open. Archiving stays neutral because it is reversible, and the Templates list's per-row trash icon stays neutral because a column of red icons shouts on every visit. The old `text-zinc-600` on all of them measured about 2.7:1 against black, under the 4.5:1 AA floor
 
 ## Next — the portfolio plan (I write, Claude guides)
 
@@ -256,7 +304,7 @@ project", so that gap outranks everything else below.
    2. ~~**Delete template**~~ — **done** (see Done), from both the editor and the list
    3. On the list screen: the green play button that starts a session from a card, and the
       "last Oct 7" hint (needs the history query plus promoting `lastTrainedByTemplate` out of `useStart`)
-3. **Exercises library** (me) — smallest CRUD, plus the archive/restore the API already has
+3. ~~**Exercises library**~~ — **done** (see Done). No page in the app is a stub any more
 4. **Deploy somewhere clickable — start this Saturday evening, not Sunday.** It is the only item on this list whose unknowns are not visible from here: a Node host for Nest, SQLite persistence across restarts, and the fact that `/api` only exists today because Vite's dev server proxies it. Everything else on this list can be estimated; this one can eat an evening. A repo link alone loses most reviewers. "Anyone can edit the demo data" is normal for a demo; do not let the auth question block this
 
 ### P1 — expected for a React role specifically

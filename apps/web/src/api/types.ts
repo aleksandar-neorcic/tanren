@@ -6,6 +6,14 @@ export interface Exercise {
   archived: boolean
 }
 
+export interface ExerciseInput {
+  name: string
+  muscleGroup: string | null
+  notes: string | null
+}
+
+export type ExerciseUpdate = Partial<ExerciseInput> & { archived?: boolean }
+
 export interface TemplateExercise {
   id: string
   order: number

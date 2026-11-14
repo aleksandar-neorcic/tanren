@@ -1,5 +1,13 @@
 import { api } from './client.ts'
-import type { Exercise, Session, SessionSummary, Template, TemplateInput } from './types.ts'
+import type {
+  Exercise,
+  ExerciseInput,
+  ExerciseUpdate,
+  Session,
+  SessionSummary,
+  Template,
+  TemplateInput,
+} from './types.ts'
 
 /**
  * One function per row of the README's API table.
@@ -11,7 +19,14 @@ import type { Exercise, Session, SessionSummary, Template, TemplateInput } from 
  */
 
 export const exercisesApi = {
-  list: () => api.get<Exercise[]>('/exercises'),
+  /** Active exercises only by default — archived ones are opt-in. */
+  list: (includeArchived = false) =>
+    api.get<Exercise[]>(`/exercises${includeArchived ? '?includeArchived=true' : ''}`),
+  create: (body: ExerciseInput) => api.post<Exercise>('/exercises', body),
+  /** `PATCH`, so an omitted field is left alone and `null` clears it. */
+  update: (id: string, body: ExerciseUpdate) => api.patch<Exercise>(`/exercises/${id}`, body),
+  /** Soft-archive. Restore is `update(id, { archived: false })`, not an endpoint. */
+  archive: (id: string) => api.delete<Exercise>(`/exercises/${id}`),
 }
 
 export const templatesApi = {

@@ -354,7 +354,7 @@ function SessionScreen({ loaded }: { loaded: WorkoutSession }) {
               type="button"
               disabled={busy}
               onClick={() => setConfirmingDiscard(true)}
-              className="mt-4 flex w-full items-center justify-center gap-1.5 py-2 text-sm text-zinc-600 disabled:opacity-40"
+              className="mt-4 flex w-full items-center justify-center gap-1.5 py-2 text-sm text-red-400 disabled:opacity-40"
             >
               <TrashIcon size={14} />
               Delete this session

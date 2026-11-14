@@ -66,7 +66,7 @@ export default function Templates() {
                 type="button"
                 aria-label={`Delete ${template.name}`}
                 onClick={() => setConfirming(template)}
-                className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full text-zinc-600 hover:bg-zinc-800 hover:text-red-400"
+                className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full text-zinc-500 hover:bg-zinc-800 hover:text-red-400"
               >
                 <TrashIcon size={16} />
               </button>
