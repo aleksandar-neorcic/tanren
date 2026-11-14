@@ -1,5 +1,7 @@
 # Tanren (鍛錬)
 
+日本語版はこちら → [README.ja.md](README.ja.md)
+
 **A gym app built to be used in a gym.** Log a workout one exercise at a time on
 your phone between sets; review history, templates and your exercise library on a
 PC. One responsive React app on a NestJS + Prisma API.
