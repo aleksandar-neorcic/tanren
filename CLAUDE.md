@@ -300,13 +300,75 @@ Product v1:
 - `strict` turned on in `tsconfig.app.json` and `tsconfig.node.json`; `react-refresh/only-export-components` now allows a `loader` export beside the page component
 - **Deviations from the mockups, deliberate:** the "last time 77.5kg × 8" hint is missing (no endpoint exposes it — the prefilled numbers *are* last time's, but the API never says so); +/− are Lucide icons rather than the `−`/`+` glyphs in the source HTML, for consistency with the rest of the app; error strips use red, which the design does not define — and that red now also marks the two irreversible actions ("Delete this session", "Delete this template"), matching the confirm button they open. Archiving stays neutral because it is reversible, and the Templates list's per-row trash icon stays neutral because a column of red icons shouts on every visit. The old `text-zinc-600` on all of them measured about 2.7:1 against black, under the 4.5:1 AA floor
 
+- **CI — `.github/workflows/pipeline.yml`.** Claude guided, I wrote it chunk by chunk. Two
+  jobs, `api` and `web`, on every push and PR to `main`:
+  - **`push` and `pull_request`, both filtered to `[main]`.** Unfiltered, a PR from a local
+    branch fires both and every run happens twice; filtered, a push to `main` fires `push`
+    only and a feature branch fires `pull_request` only
+  - `node-version-file: .nvmrc`, not a hardcoded `22` — one source of truth. Earned the same
+    morning: `nest start` died on the shell's default Node 20 with `ERR_REQUIRE_CYCLE_MODULE`
+    on `ora`, inside the Nest CLI's own dependency. CI reads the file the repo already has
+  - **`npm ci` failed on the very first run, which is the point.** `apps/api/package-lock.json`
+    was a commit behind `package.json` and held no webpack tree at all despite pinning
+    `@nestjs/cli@12`. Invisible locally, because `node_modules` was already populated. Fixed
+    with `npm install --package-lock-only`, which rewrites the lock without touching the
+    installed tree, so the running dev servers were unaffected
+  - **`prisma generate` needs `DATABASE_URL` even though it never connects.**
+    `prisma.config.ts` calls `env('DATABASE_URL')`, which throws while the config *loads*, so
+    any Prisma CLI call dies without it — and `.env` is gitignored, so CI has none. The fix is
+    a step-scoped `DATABASE_URL: file:./ci.db`; job-scoped would sit under `test:e2e`'s own
+    value and make it ambiguous which one the tests ran against. The local pre-flight missed
+    it because `prisma.config.ts` imports `dotenv/config`, which loaded the real `.env` back in
+  - step order is lint → typecheck → e2e, cheapest failure first, with `generate` before
+    `typecheck` because `tsc` reads the emitted Prisma types
+  - `cache-dependency-path` is an input to a `uses:` step, so it resolves from the **repo
+    root** and ignores `defaults.run.working-directory`. A wrong path does not error — it
+    silently caches nothing
+  - named **Pipeline**, not CI. GitHub identifies a workflow by its **file path**, so renaming
+    the file registers a new one; the old entry keeps its runs and disappears once no file
+    produces it
+  - **no `web` test step** — `apps/web` still has no runner (P1 5), and the workflow says so
+    in a comment rather than leaving the gap unexplained
+  - a `Pipeline — passing` badge now leads both READMEs
+
+- **The exercise library is reachable on a phone** — the last functional hole:
+  - a phone-only "Exercise library" row on the Templates screen (`md:hidden`), because
+    `docs/design/README.md` fixes the pill bar at three tabs and says the library is reached
+    from the Templates tab. **A fourth tab was considered and rejected:** it would also mean
+    deleting `owns: ['/exercises']` or two tabs light up at once, and it spends permanent
+    thumb space on a screen used at home on a PC
+  - **and a way back, which the mockup never had.** `screens-1.png` #3 draws Exercises like a
+    top-level screen — wordmark, no back control — so the only exit was the Templates tab,
+    already lit by `owns`, which reads "you are here", not "tap to leave". A `‹` chevron now
+    sits in the header row, borrowing the affordance the template editor uses in #2
+  - **inside the header row, not above it.** On a phone the page already carries the wordmark,
+    so a row of its own would stack a third before any content. `md:hidden` takes the chevron
+    out of the flow on PC and the flex `gap` collapses with it, so the PC header is unchanged
+  - a fixed `<Link to="/templates">`, not `navigate(-1)`: `/exercises` is reachable by deep
+    link, refresh or the PC sidebar, so "back" and "Templates" are not the same place.
+    History-back is right for a linear wizard, an explicit route for a hierarchy
+  - `-ml-2` on the chevron cancels its own tap-target padding so the glyph aligns optically
+    with the title below. The same pattern already sits on Session's "Leave" link; the page
+    gutter is `px-4`, so pulling 8px leaves it inside the viewport with no sideways scroll
+
+- **`Co-Authored-By: Claude` decided: none from here on.** Nothing in git config or hooks adds
+  it and the last eight commits already had none, so the decision was really just confirming
+  it. 49 of 71 older commits carry it and stay that way — rewriting every commit since the
+  start to force-push a now-public repo is not worth it, and the README's "How I built this"
+  already says how the project was built
+
+- **Repo made public**, with the description and six topics set. It still read "Kurashi –
+  personal life app for living and working in Japan": repo metadata lives on GitHub, not in
+  the tree, so the rename could never have touched it. `gh` installed to `~/.local/bin`
+  (checksum-verified, no sudo) and authenticated
+
 ## Next — the portfolio plan (I write, Claude guides)
 
-The API is feature-complete against the README table. **The web app is the
-deliverable being judged**, and it is currently 2 of 5 screens: History,
-Templates and Exercises are still stubs. A reviewer who clicks History and sees
-a placeholder stops reading the React and starts thinking "unfinished side
-project", so that gap outranks everything else below.
+The API is feature-complete against the README table, and as of Sunday
+2026-11-15 so is the web app: **all five screens are real, none is a stub**, the
+library is reachable on a phone, the repo is public and `Pipeline` is green.
+What remains below is polish and the work deliberately parked until after the
+send — nothing on it blocks Monday.
 
 ### Sunday 2026-11-15 — everything left, in order
 
@@ -314,20 +376,15 @@ Saturday ended here: P0 is built (all five screens real), the deploy is cut on p
 the API has 8 e2e tests, both READMEs lead with the demo recordings, and everything is
 committed and pushed. Sending on **Monday 2026-11-16, 12:00 JST**.
 
-1. **Make the repo public** — `gh repo edit --visibility public`. The hard blocker: until
-   then every link, GIF and file in the README 404s for whoever gets the link. Mine to do,
-   nobody else's
-2. **Exercises is unreachable on a phone** — the only functional hole left. `navItems` has
-   `onPhone: false` for it, the pill bar holds three tabs, and nothing on the Templates
-   screen links to `/exercises`. One `<Link>` on the Templates screen closes it
-3. **CI** (Claude) — `.github/workflows`: typecheck + lint + `npm run test:e2e` on push.
-   Cheap now that the tests exist, and a green check on the repo front page is what reads
-   "professional" with no deploy behind it
-4. **Decide the `Co-Authored-By: Claude` trailer** — still on most commits, and the new ones
-   deliberately have none. Keep it or strip it, but decide rather than discover it mid-interview.
-   The README's "How I built this" already says how the project was built, so keeping it is
-   consistent
-5. Optional, only if the morning leaves room: reorder rows in the template editor
+1. ~~**Make the repo public**~~ — **done.** Description and topics fixed too; they still
+   said Kurashi, because repo metadata is not in the tree
+2. ~~**Exercises is unreachable on a phone**~~ — **done**, and it needed two parts, not one:
+   a link in, and a `‹` back out that the mockup never drew (see Done)
+3. ~~**CI**~~ — **done**: `Pipeline`, two jobs, green. It caught a broken API lockfile on its
+   first run, which no local command could see
+4. ~~**Decide the `Co-Authored-By: Claude` trailer**~~ — **decided: none from here on**,
+   history left alone (see Done)
+5. Optional, only if the evening leaves room: reorder rows in the template editor
    (`useFieldArray`'s `move()`), and the green play button on the Templates list cards
 
 Not doing: the deploy (see 4 below), auth, charts, PRs, Docker, i18n beyond the Japanese
@@ -363,7 +420,7 @@ README.
 ### P1 — expected for a React role specifically
 5. **Tests** — `apps/web` has no test runner at all today. Claude sets up Vitest + Testing Library, I write them. Not coverage numbers; about six that mean something: the set-logging flow, the derived current-exercise logic (where the real bug lived), `ApiError` parsing a Nest validation body
 6. ~~**README screenshot or GIF at the top**~~ — **done**, and then some: four GIFs and a 90-second tour (see Done) — reviewers spend about a minute. 103 lines of prose and no images is the wrong trade
-7. **CI** (Claude) — no `.github/workflows` yet. Typecheck + lint + test is cheap and signals professionalism
+7. ~~**CI**~~ — **done** (see Done). `Pipeline`: typecheck + lint + the 8 API e2e tests on every push, badge on both READMEs. No `web` test step until 5 lands
 
 ### Deliberately not before sending
 Auth, charts, PRs, Docker, i18n, and the `screens-2.png` extras (rest timer,
