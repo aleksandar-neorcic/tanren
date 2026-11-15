@@ -1,5 +1,7 @@
 # Tanren (鍛錬)
 
+[![Pipeline](https://github.com/aleksandar-neorcic/tanren/actions/workflows/pipeline.yml/badge.svg)](https://github.com/aleksandar-neorcic/tanren/actions/workflows/pipeline.yml)
+
 日本語版はこちら → [README.ja.md](README.ja.md)
 
 **A gym app built to be used in a gym.** Log a workout one exercise at a time on

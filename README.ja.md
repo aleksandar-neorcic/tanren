@@ -1,5 +1,7 @@
 # Tanren（鍛錬）
 
+[![Pipeline](https://github.com/aleksandar-neorcic/tanren/actions/workflows/pipeline.yml/badge.svg)](https://github.com/aleksandar-neorcic/tanren/actions/workflows/pipeline.yml)
+
 English version → [README.md](README.md)
 
 **ジムで実際に使うために作ったトレーニング記録アプリです。** セットの合間にスマートフォンで
