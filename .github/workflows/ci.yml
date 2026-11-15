@@ -1,0 +1,62 @@
+# .github/workflows/ci.yml
+
+name: CI                       # the label in the Actions tab and on the status badge
+
+on:                            # parses as the string "on" for GitHub; linters may call it `true`
+  push:
+    branches: [main]           # filtered, so a feature-branch push doesn't also fire this
+  pull_request:
+    branches: [main]           # the pair above = no double runs on a PR from your own branch
+
+jobs:                          # jobs run in PARALLEL by default — api and web don't wait on each other
+  api:                         # job id; also the name of the status check on the commit
+    runs-on: ubuntu-latest     # clean container: no Node, no node_modules, no generated Prisma client
+    defaults:
+      run:
+        working-directory: apps/api   # applied to every `run:` below; NOT to `uses:` steps
+    steps:
+      - uses: actions/checkout@v7     # clone the repo onto the runner — nothing is there before this
+      - uses: actions/setup-node@v7   # install the Node version and put npm on PATH
+        with:
+          node-version-file: .nvmrc           # single source of truth; bump the file, CI follows
+          cache: npm                          # caches npm's download dir, keyed on the lockfile hash
+          cache-dependency-path: apps/api/package-lock.json   # from the REPO ROOT, defaults don't apply
+
+      - name: Install                 # `name:` becomes the collapsible heading in the Actions log
+        run: npm ci                   # exact lockfile install; FAILS if lock and package.json disagree
+
+      - name: Generate Prisma client
+        run: npx prisma generate      # explicit, though @prisma/client's postinstall also does it:
+                                      # --ignore-scripts would skip that, and tsc needs these types
+
+      - name: Lint
+        run: npm run lint             # oxlint — near-instant, so it goes first (job stops at first failure)
+
+      - name: Typecheck
+        run: npm run typecheck        # tsc --noEmit; MUST run after generate, it reads the Prisma types
+
+      - name: Test (e2e)
+        run: npm run test:e2e         # needs no DB setup: test-env.ts sets DATABASE_URL,
+                                      # global-setup.ts runs `prisma db push` itself
+
+  web:                                # same shape, three differences: id, directory, no Prisma
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc           # the same root .nvmrc feeds both jobs
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json   # the other lockfile
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint             # eslint . — includes react-hooks v7, the rule that caught Date.now()
+
+      - name: Typecheck
+        run: npm run typecheck        # tsc -b, which is why `strict` being on actually means something
