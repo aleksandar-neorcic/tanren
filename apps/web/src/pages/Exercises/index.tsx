@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { errorMessage } from '@/api/client.ts'
 import type { Exercise } from '@/api/types.ts'
-import { PlusIcon } from '@/components/icons.tsx'
+import { ChevronLeftIcon, PlusIcon } from '@/components/icons.tsx'
 import Loading from '@/components/Loading.tsx'
 import { ExerciseSheet } from './components/index.ts'
 import useExercises from './hooks/useExercises.ts'
@@ -62,7 +63,21 @@ export default function Exercises() {
   return (
     <div className="max-w-xl md:max-w-3xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-black tracking-tight uppercase">Exercises</h1>
+        <div className="flex items-center gap-1">
+          {/* Phone-only way out: the pill bar shows Templates lit (it `owns`
+              this route), which reads as "you are here", not "tap to leave".
+              It sits inside the header row so it costs no vertical space --
+              `md:hidden` takes it out of the flow on PC, where the sidebar
+              already has an Exercises item, and the gap collapses with it. */}
+          <Link
+            to="/templates"
+            aria-label="Back to templates"
+            className="-ml-2 flex h-9 w-9 items-center justify-center rounded-full text-zinc-400 md:hidden"
+          >
+            <ChevronLeftIcon size={20} />
+          </Link>
+          <h1 className="text-3xl font-black tracking-tight uppercase">Exercises</h1>
+        </div>
         <button
           type="button"
           onClick={() => setSheet({})}

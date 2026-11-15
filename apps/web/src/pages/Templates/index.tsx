@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { errorMessage } from '@/api/client.ts'
 import type { Template } from '@/api/types.ts'
 import ConfirmDialog from '@/components/ConfirmDialog.tsx'
-import { PlusIcon, TrashIcon } from '@/components/icons.tsx'
+import { DumbbellIcon, PlusIcon, TrashIcon } from '@/components/icons.tsx'
 import Loading from '@/components/Loading.tsx'
 import useTemplates from './hooks/useTemplates.ts'
 
@@ -34,6 +34,17 @@ export default function Templates() {
           New
         </Link>
       </div>
+
+      {/* Phone-only: the pill bar has no Exercises tab (docs/design/README.md),
+          so this is the only way in on a phone. Hidden from md up, where the
+          sidebar has its own Exercises item. */}
+      <Link
+        to="/exercises"
+        className="mt-4 flex h-12 items-center gap-2 rounded-2xl bg-zinc-900 px-4 text-sm text-zinc-400 md:hidden"
+      >
+        <DumbbellIcon size={16} />
+        Exercise library
+      </Link>
 
       {removeError && (
         <p className="mt-4 rounded-2xl bg-red-500/10 px-4 py-3 text-sm text-red-400">
