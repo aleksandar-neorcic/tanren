@@ -1,5 +1,3 @@
-<p align="center"><img src="docs/design/brand/logo-512.png" alt="Tanren logo" width="160"></p>
-
 # Tanren（鍛錬）
 
 [![Pipeline](https://github.com/aleksandar-neorcic/tanren/actions/workflows/pipeline.yml/badge.svg)](https://github.com/aleksandar-neorcic/tanren/actions/workflows/pipeline.yml)
