@@ -28,6 +28,10 @@ jobs:                          # jobs run in PARALLEL by default — api and web
       - name: Generate Prisma client
         run: npx prisma generate      # explicit, though @prisma/client's postinstall also does it:
                                       # --ignore-scripts would skip that, and tsc needs these types
+        env:                          # step-scoped, not job-scoped: test:e2e sets its own
+          DATABASE_URL: file:./ci.db  # never connected to (generate emits types, it doesn't query) --
+                                      # prisma.config.ts calls env('DATABASE_URL'), which throws
+                                      # while the config LOADS if the variable is merely absent
 
       - name: Lint
         run: npm run lint             # oxlint — near-instant, so it goes first (job stops at first failure)
