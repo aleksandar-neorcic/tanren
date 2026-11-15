@@ -1,6 +1,6 @@
-# .github/workflows/ci.yml
+# .github/workflows/pipeline.yml
 
-name: CI                       # the label in the Actions tab and on the status badge
+name: Pipeline                 # the label in the Actions tab and on the status badge
 
 on:                            # parses as the string "on" for GitHub; linters may call it `true`
   push:
